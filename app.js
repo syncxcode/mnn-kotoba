@@ -15,7 +15,8 @@
     quizKanji: $('quizKanji'), quizForm: $('quizForm'), quizAnswer: $('quizAnswer'),
     inputHint: $('inputHint'), check: $('checkAnswer'), restart: $('restartQuiz'),
     overlay: $('feedbackOverlay'), dialog: $('feedbackDialog'), feedbackSymbol: $('feedbackSymbol'),
-    feedbackTitle: $('feedbackTitle'), feedbackDesc: $('feedbackDescription'), feedbackAttempts: $('feedbackAttempts')
+    feedbackTitle: $('feedbackTitle'), feedbackDesc: $('feedbackDescription'), feedbackAttempts: $('feedbackAttempts'),
+    meaningOverlay: $('meaningOverlay'), meaningDialog: $('meaningDialog'), meaningTitle: $('meaningTitle'), meaningFull: $('meaningFull'), closeMeaning: $('closeMeaning')
   };
   const state = { chapter: 1, tab: 'list', query: '', quizItems: [], quizIndex: 0, mistakes: 0, composing: false, popupTimer: 0, popupAction: null };
   // Cooldowns persist for the page session even if search/bab/tab changes.
@@ -91,12 +92,58 @@
         kanjiCell.addEventListener('click', () => speak(item.kana));
         kanjiCell.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); speak(item.kana); } });
       }
-      const meaningCell = createCell(item.arti || '', 'cell--meaning');
+      const meaningCell = createCell('', 'cell--meaning');
+      const meaningText = safeNode('span', 'meaning-text', item.arti || '');
+      meaningCell.appendChild(meaningText);
       meaningCell.setAttribute('role', 'cell');
+      if (item.arti) {
+        // Only open a popup when this text is actually truncated on this screen.
+        const isClamped = () => meaningText.scrollHeight > meaningText.clientHeight + 1;
+        const openIfLong = () => {
+          if (isClamped()) openMeaning(item);
+        };
+        meaningCell.addEventListener('click', openIfLong);
+        meaningCell.addEventListener('keydown', ev => {
+          if ((ev.key === 'Enter' || ev.key === ' ') && isClamped()) {
+            ev.preventDefault(); openMeaning(item);
+          }
+        });
+        const updateMeaningAccess = () => {
+          const truncated = isClamped();
+          meaningCell.classList.toggle('cell--meaning-expandable', truncated);
+          if (truncated) {
+            meaningCell.tabIndex = 0;
+            meaningCell.setAttribute('role', 'button');
+            meaningCell.setAttribute('aria-label', 'Buka arti lengkap: ' + (item.kanji || item.kana));
+          } else {
+            meaningCell.removeAttribute('tabindex');
+            meaningCell.setAttribute('role', 'cell');
+            meaningCell.removeAttribute('aria-label');
+          }
+        };
+        requestAnimationFrame(updateMeaningAccess);
+      }
       row.append(kanaCell, kanjiCell, meaningCell);
       fragment.appendChild(row);
     });
     els.rows.appendChild(fragment);
+  }
+  let meaningPreviousFocus = null;
+  function openMeaning(item) {
+    if (!els.meaningOverlay || !els.meaningDialog) return;
+    meaningPreviousFocus = document.activeElement;
+    els.meaningTitle.textContent = item.kanji || item.kana;
+    els.meaningFull.textContent = item.arti || '';
+    els.meaningOverlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    els.closeMeaning.focus({preventScroll: true});
+  }
+  function closeMeaning() {
+    if (!els.meaningOverlay || els.meaningOverlay.hidden) return;
+    els.meaningOverlay.hidden = true;
+    document.body.style.overflow = '';
+    if (meaningPreviousFocus?.isConnected) meaningPreviousFocus.focus({preventScroll: true});
+    meaningPreviousFocus = null;
   }
   function updateKanaState(key, cell, bar) {
     const now = Date.now(); const timing = kanaCooldowns.get(key);
@@ -226,6 +273,13 @@
     els.quizAnswer.addEventListener('input', () => { if (!state.composing) validateInputDisplay(); });
     els.restart.addEventListener('click', resetQuiz);
     els.overlay.addEventListener('click', event => { if (event.target === els.overlay) closeFeedback(true); });
+    els.meaningOverlay.addEventListener('click', event => { if (event.target === els.meaningOverlay) closeMeaning(); });
+    els.closeMeaning.addEventListener('click', closeMeaning);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !els.meaningOverlay.hidden) {
+        event.preventDefault(); closeMeaning();
+      }
+    });
     // Escape also closes the popup for desktop keyboard accessibility.
     document.addEventListener('keydown', event => { if (event.key === 'Escape' && !els.overlay.hidden) { event.preventDefault(); closeFeedback(true); } });
     renderList(); resetQuiz();
