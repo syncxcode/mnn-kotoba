@@ -176,3 +176,10 @@ select:hover, input:hover { border-color: #78605a; }
   .feedback .feedback__footnote { margin-top: 9px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* HEADER FREEZE / STICKY */
+.masthead {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
