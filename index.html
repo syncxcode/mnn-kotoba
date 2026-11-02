@@ -1,1 +1,87 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1727">
+  <meta name="description" content="みんなの日本語「言葉」— latihan membaca kotoba Minna no Nihongo I Bab 1–25.">
+  <title>みんなの日本語「言葉」</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <script defer src="./data/data.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="masthead__grid" aria-hidden="true"></div>
+    <div class="masthead__kanji masthead__kanji--one" aria-hidden="true">語</div>
+    <div class="masthead__kanji masthead__kanji--two" aria-hidden="true">学</div>
+    <div class="shell">
+      <div class="brand"><span class="brand__mark" aria-hidden="true">言</span><span>みんなの日本語<span class="accent">「言葉」</span></span></div>
+      <div class="hero">
+        <p class="eyebrow">MINNA NO NIHONGO I · BAB 1–25</p>
+        <h1>Belajar <span class="accent">kotoba.</span><br>Tanpa intip kana.</h1>
+        <p class="hero__desc">Baca, ingat, dan uji kemampuan membaca kanji. Ringan di layar kecil, nyaman di layar besar.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell main-content">
+    <section class="toolbar panel" aria-label="Kontrol belajar">
+      <div class="toolbar__inputs">
+        <label class="field">
+          <span class="field__label">Pilih bab</span>
+          <select id="chapterSelect" aria-label="Pilih bab"></select>
+        </label>
+        <label class="field field--search">
+          <span class="field__label">Cari kotoba</span>
+          <input id="searchInput" type="search" autocomplete="off" placeholder="Cari kana, kanji, atau arti…">
+        </label>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Mode belajar">
+        <button id="listTab" class="tab is-active" type="button" role="tab" aria-selected="true" aria-controls="listPanel">Daftar kotoba</button>
+        <button id="quizTab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="quizPanel">Tes bacaan</button>
+      </div>
+      <div class="hints"><span id="wordTotal">0 kata</span><span>🔊 Tap kanji: suara</span><span>🔒 Kana: 2 detik</span><span>⏳ Cooldown: 10 detik</span></div>
+    </section>
+
+    <section id="listPanel" class="learning-section" role="tabpanel" aria-labelledby="listTab">
+      <div class="section-head"><div><p class="eyebrow">DAFTAR KOTOBA</p><h2 id="listTitle">Bab 1</h2></div><span id="listCount" class="section-count"></span></div>
+      <div class="vocab-table" role="table" aria-label="Daftar kotoba">
+        <div class="vocab-table__head" role="row"><span role="columnheader">Kana</span><span role="columnheader">Kanji / Kata</span><span role="columnheader">Arti</span></div>
+        <div id="vocabRows" class="vocab-table__body" role="rowgroup"></div>
+      </div>
+      <p id="listEmpty" class="empty-state" hidden>Belum ada data kotoba pada bab ini.</p>
+    </section>
+
+    <section id="quizPanel" class="learning-section" role="tabpanel" aria-labelledby="quizTab" hidden>
+      <div class="section-head"><div><p class="eyebrow">LATIHAN MANDIRI</p><h2 id="quizTitle">Tes bacaan · Bab 1</h2></div><span id="quizCount" class="section-count">0 / 0</span></div>
+      <div class="quiz panel">
+        <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
+        <div id="quizWork">
+          <div class="kanji-card"><span class="kanji-card__hint">かんじを よんでください</span><div id="quizKanji" class="kanji-card__text">先生</div></div>
+          <form id="quizForm" class="quiz-form" novalidate>
+            <label for="quizAnswer">こたえ（かなだけ）</label>
+            <div class="quiz-form__controls"><input id="quizAnswer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" lang="ja" placeholder="ひらがな・カタカナで入力" enterkeyhint="done"><button type="submit" id="checkAnswer" class="primary-btn">Cek</button></div>
+            <p id="inputHint" class="input-hint" aria-live="polite">Jawab dengan kana sesuai bacaan di data. Romaji tidak diterima.</p>
+          </form>
+        </div>
+        <div id="quizFinish" class="quiz-finish" hidden><div class="quiz-finish__symbol">✓</div><h3>テスト終了！</h3><p>Semua bacaan sudah dijawab.</p><button id="restartQuiz" type="button" class="primary-btn">Ulangi tes</button></div>
+        <p id="quizEmpty" class="empty-state" hidden>Belum ada kotoba berkanji untuk dites di bab ini.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer shell">みんなの日本語「言葉」 · Latihan baca kanji</footer>
+
+  <div id="feedbackOverlay" class="modal-overlay" role="presentation" hidden>
+    <div id="feedbackDialog" class="feedback" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" aria-describedby="feedbackDescription" tabindex="-1">
+      <div id="feedbackSymbol" class="feedback__symbol" aria-hidden="true"></div>
+      <h2 id="feedbackTitle">違います</h2>
+      <p id="feedbackDescription">Silakan coba lagi!</p>
+      <span id="feedbackAttempts" class="feedback__attempts"></span>
+      <p class="feedback__footnote">Tap area kosong untuk menutup</p>
+    </div>
+  </div>
+</body>
+</html>
 
