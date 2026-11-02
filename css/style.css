@@ -127,6 +127,9 @@ select:hover, input:hover { border-color: #78605a; }
 .feedback__attempts { display: block; font-size: .8rem; color: #827b78; margin-top: 10px; }
 .feedback .feedback__footnote { margin-top: 21px; font-size: .73rem; color: #98908e; }
 .footer { padding-bottom: 28px; text-align: center; color: #9b8982; font-size: .83rem; }
+.footer__title { display: block; }
+.footer__divider { display: block; width: 38px; height: 1px; background: #ae4936; margin: 10px auto; }
+.footer__credit { display: block; color: #a69691; font-size: .75rem; letter-spacing: .025em; }
 @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @media (max-width: 620px) {
   .shell { width: min(calc(100% - 24px),1120px); }
