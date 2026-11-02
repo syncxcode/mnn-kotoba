@@ -94,6 +94,17 @@
     <span class="footer__credit">制作：ファルハン・アブドゥルラフマン</span>
   </footer>
 
+  <div id="meaningOverlay" class="modal-overlay meaning-overlay" role="presentation" hidden>
+    <div id="meaningDialog" class="meaning-dialog" role="dialog" aria-modal="true" aria-labelledby="meaningTitle" aria-describedby="meaningFull" tabindex="-1">
+      <button id="closeMeaning" type="button" class="meaning-dialog__close" aria-label="Tutup arti lengkap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5 19 19M19 5 5 19"/></svg>
+      </button>
+      <p class="meaning-dialog__eyebrow">ARTI KOTOBA</p>
+      <h2 id="meaningTitle" class="jp" lang="ja"></h2>
+      <p id="meaningFull"></p>
+    </div>
+  </div>
+
   <div id="feedbackOverlay" class="modal-overlay" role="presentation" hidden>
     <div id="feedbackDialog" class="feedback" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle" aria-describedby="feedbackDescription" tabindex="-1">
       <div id="feedbackSymbol" class="feedback__symbol" aria-hidden="true"></div>
