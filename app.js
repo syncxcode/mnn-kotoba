@@ -27,7 +27,7 @@
   const entries = chapter => Array.isArray(DATA[chapter]) ? DATA[chapter] : [];
   const itemKey = (chapter, index) => `${chapter}:${index}`;
   function refreshChapterOptions() {
-    for (let chapter = 1; chapter <= 25; chapter++) {
+    for (let chapter = 1; chapter <= 50; chapter++) {
       const opt = document.createElement('option');
       opt.value = chapter;
       opt.textContent = `Bab ${chapter} · ${entries(chapter).length} kata`;
@@ -207,7 +207,7 @@
   }
   function changeChapter() {
     const parsed = Number(els.chapter.value);
-    if (parsed < 1 || parsed > 25) return;
+    if (parsed < 1 || parsed > 50) return;
     closeFeedback(false); clearDomTimers();
     state.chapter = parsed;
     els.search.value = ''; state.query = '';
@@ -243,7 +243,16 @@
     try { els.quizAnswer.setSelectionRange(Math.min(pos, els.quizAnswer.value.length), Math.min(pos, els.quizAnswer.value.length)); } catch (_) {}
     els.inputHint.textContent = 'Hanya huruf kana. Ganti keyboard ke bahasa Jepang.';
   }
+  // Lightweight anti-selection/copy UX; not a DRM or source-code protection mechanism.
+  document.addEventListener('copy', event => event.preventDefault());
+  document.addEventListener('cut', event => event.preventDefault());
+  document.addEventListener('dragstart', event => event.preventDefault());
+  document.addEventListener('selectstart', event => {
+    if (!(event.target instanceof Element) || !event.target.closest('input, textarea, [contenteditable]')) event.preventDefault();
+  });
+  document.addEventListener('contextmenu', event => {
+    if (!(event.target instanceof Element) || !event.target.closest('input, textarea, [contenteditable]')) event.preventDefault();
+  });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', attach);
   else attach();
 })();
-
