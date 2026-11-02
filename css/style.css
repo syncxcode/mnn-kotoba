@@ -186,3 +186,71 @@ select:hover, input:hover { border-color: #78605a; }
     top: 0;
     z-index: 100;
 }
+
+
+/* Keep the reading and original Japanese fully visible; abbreviate only meanings. */
+.cell--kana, .cell--kanji { overflow-wrap: anywhere; word-break: normal; }
+.cell--meaning { min-width: 0; }
+.meaning-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  line-height: 1.45;
+}
+.cell--meaning-expandable { cursor: pointer; }
+.cell--meaning-expandable:hover, .cell--meaning-expandable:focus-visible {
+  border-color: var(--accent-bright);
+  background: #3d302c;
+}
+.meaning-overlay { z-index: 200; }
+.meaning-dialog {
+  position: relative;
+  width: min(100%, 470px);
+  max-height: min(78dvh, 650px);
+  overflow-y: auto;
+  padding: clamp(20px, 4vw, 30px);
+  border-radius: 20px;
+  background: #fff;
+  color: #292426;
+  box-shadow: 0 25px 70px #0008;
+  animation: pop .19s ease-out;
+  outline: none;
+}
+.meaning-dialog__eyebrow {
+  margin: 0 38px 10px 0;
+  color: #af422b;
+  font: 700 .72rem/1.3 'Ubuntu',sans-serif;
+  letter-spacing: .1em;
+}
+.meaning-dialog h2 {
+  margin: 0 34px 16px 0;
+  color: #262121;
+  font-size: clamp(1.35rem, 4vw, 1.8rem);
+  overflow-wrap: anywhere;
+}
+.meaning-dialog #meaningFull {
+  border-top: 1px solid #e4dfdc;
+  padding-top: 16px;
+  margin-bottom: 0;
+  font: 400 .96rem/1.7 'Ubuntu',system-ui,sans-serif;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.meaning-dialog__close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e5ddda;
+  border-radius: 50%;
+  background: #f7f3f1;
+  color: #443a37;
+}
+.meaning-dialog__close svg { width: 17px; height: 17px; }
