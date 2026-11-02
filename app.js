@@ -17,7 +17,7 @@
     overlay: $('feedbackOverlay'), dialog: $('feedbackDialog'), feedbackSymbol: $('feedbackSymbol'),
     feedbackTitle: $('feedbackTitle'), feedbackDesc: $('feedbackDescription'), feedbackAttempts: $('feedbackAttempts')
   };
-  const state = { chapter: 1, tab: 'list', query: '', quizItems: [], quizIndex: 0, mistakes: 0, composing: false, popupTimer: 0, popupAction: null, lastFocus: null };
+  const state = { chapter: 1, tab: 'list', query: '', quizItems: [], quizIndex: 0, mistakes: 0, composing: false, popupTimer: 0, popupAction: null };
   // Cooldowns persist for the page session even if search/bab/tab changes.
   const kanaCooldowns = new Map(); // key -> { revealUntil, cooldownUntil }
   const runningTimers = new Set();
@@ -165,12 +165,12 @@
     '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="24" cy="24" r="20" stroke="#DC2626" stroke-width="3.5"/><path d="M17 17 31 31M31 17 17 31" stroke="#DC2626" stroke-width="4" stroke-linecap="round"/></svg>';
   function feedback(isCorrect, thirdWrong) {
     closeFeedback(false);
-    state.lastFocus = document.activeElement;
+    // Tutup keyboard virtual sebelum popup; fokus baru hanya saat user mengetuk input.
+    els.quizAnswer.blur();
     state.popupAction = () => {
       if (isCorrect) { state.quizIndex++; state.mistakes = 0; els.quizAnswer.value = ''; renderQuiz(); }
       else if (thirdWrong) switchTab('list');
       else { els.quizAnswer.value = ''; }
-      if (state.tab === 'quiz' && !els.quizWork.hidden) els.quizAnswer.focus({ preventScroll: true });
     };
     els.dialog.classList.toggle('feedback--correct', isCorrect);
     els.dialog.classList.toggle('feedback--wrong', !isCorrect);
