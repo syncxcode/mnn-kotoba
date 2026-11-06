@@ -206,12 +206,16 @@ select:hover, input:hover { border-color: #78605a; }
   border-color: var(--accent-bright);
   background: #3d302c;
 }
-.meaning-overlay { z-index: 200; }
+html.meaning-open { overflow: hidden; overscroll-behavior: none; }
+html.meaning-open body { position: fixed; width: 100%; }
+.meaning-overlay { z-index: 200; overflow: hidden; overscroll-behavior: none; }
 .meaning-dialog {
   position: relative;
   width: min(100%, 470px);
   max-height: min(78dvh, 650px);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: clamp(20px, 4vw, 30px);
   border-radius: 20px;
   background: #fff;

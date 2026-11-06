@@ -129,19 +129,49 @@
     els.rows.appendChild(fragment);
   }
   let meaningPreviousFocus = null;
+  let meaningScrollState = null;
+  function lockMeaningScroll() {
+    if (meaningScrollState) return;
+    const body = document.body;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const paddingRight = parseFloat(getComputedStyle(body).paddingRight) || 0;
+    meaningScrollState = {
+      x: window.scrollX, y: window.scrollY,
+      styles: ['top', 'left', 'padding-right'].map(property =>
+        [property, body.style.getPropertyValue(property), body.style.getPropertyPriority(property)])
+    };
+    // A fixed body also locks touch scrolling on mobile browsers.
+    body.style.top = `${-meaningScrollState.y}px`;
+    body.style.left = `${-meaningScrollState.x}px`;
+    body.style.paddingRight = `${paddingRight + scrollbarWidth}px`;
+    document.documentElement.classList.add('meaning-open');
+  }
+  function unlockMeaningScroll() {
+    if (!meaningScrollState) return;
+    const { x, y, styles } = meaningScrollState;
+    document.documentElement.classList.remove('meaning-open');
+    for (const [property, value, priority] of styles) {
+      if (value) document.body.style.setProperty(property, value, priority);
+      else document.body.style.removeProperty(property);
+    }
+    meaningScrollState = null;
+    // Restore immediately even if the page uses smooth scrolling.
+    window.scrollTo({ left: x, top: y, behavior: 'instant' });
+  }
   function openMeaning(item) {
-    if (!els.meaningOverlay || !els.meaningDialog) return;
+    if (!els.meaningOverlay || !els.meaningDialog || !els.meaningOverlay.hidden) return;
     meaningPreviousFocus = document.activeElement;
     els.meaningTitle.textContent = item.kanji || item.kana;
     els.meaningFull.textContent = item.arti || '';
+    lockMeaningScroll();
     els.meaningOverlay.hidden = false;
-    document.body.style.overflow = 'hidden';
+    els.meaningDialog.scrollTop = 0;
     els.closeMeaning.focus({preventScroll: true});
   }
   function closeMeaning() {
     if (!els.meaningOverlay || els.meaningOverlay.hidden) return;
     els.meaningOverlay.hidden = true;
-    document.body.style.overflow = '';
+    unlockMeaningScroll();
     if (meaningPreviousFocus?.isConnected) meaningPreviousFocus.focus({preventScroll: true});
     meaningPreviousFocus = null;
   }
