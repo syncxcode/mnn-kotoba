@@ -4,10 +4,12 @@
 
   const DATA = Array.isArray(window.JFT_KOTOBA) ? window.JFT_KOTOBA : [];
   const CATEGORIES = [
-    '全分類', '動詞', '形容詞', '形容動詞', '名詞',
+    '動詞', '形容詞', '形容動詞', '名詞',
     '副詞', '接続詞', '助詞', '感動詞', '表現'
   ];
   const FEEDBACK_MS = 8000;
+  const A_Z = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
+  const JA = new Intl.Collator('ja');
   const kanaRegex = /^[\p{Script=Hiragana}\p{Script=Katakana}ー\s]+$/u;
   const hasKanji = value => /\p{Script=Han}/u.test(value || '');
   const normalize = value => String(value || '').normalize('NFC').trim();
@@ -32,14 +34,75 @@
   };
 
   const state = {
-    category: '全分類', tab: 'list', query: '',
+    category: CATEGORIES.find(category => DATA.some(item => item.kategori === category)) || CATEGORIES[0], tab: 'list', query: '',
     quizItems: [], quizIndex: 0, mistakes: 0,
     composing: false, popupTimer: 0, popupAction: null
   };
 
-  const entries = () => DATA.filter(item =>
-    state.category === '全分類' || item.kategori === state.category
-  );
+  // Alphabetize each Japanese category A–Z by the stored reading, without showing romaji.
+  // A later import can optionally provide sortKey for exceptional readings.
+  const kanaToLatin = value => {
+    const map = {
+      あ:'a',い:'i',う:'u',え:'e',お:'o',
+      か:'ka',き:'ki',く:'ku',け:'ke',こ:'ko',
+      さ:'sa',し:'shi',す:'su',せ:'se',そ:'so',
+      た:'ta',ち:'chi',つ:'tsu',て:'te',と:'to',
+      な:'na',に:'ni',ぬ:'nu',ね:'ne',の:'no',
+      は:'ha',ひ:'hi',ふ:'fu',へ:'he',ほ:'ho',
+      ま:'ma',み:'mi',む:'mu',め:'me',も:'mo',
+      や:'ya',ゆ:'yu',よ:'yo',
+      ら:'ra',り:'ri',る:'ru',れ:'re',ろ:'ro',
+      わ:'wa',ゐ:'wi',ゑ:'we',を:'wo',ん:'n',
+      が:'ga',ぎ:'gi',ぐ:'gu',げ:'ge',ご:'go',
+      ざ:'za',じ:'ji',ず:'zu',ぜ:'ze',ぞ:'zo',
+      だ:'da',ぢ:'ji',づ:'zu',で:'de',ど:'do',
+      ば:'ba',び:'bi',ぶ:'bu',べ:'be',ぼ:'bo',
+      ぱ:'pa',ぴ:'pi',ぷ:'pu',ぺ:'pe',ぽ:'po',
+      ぁ:'a',ぃ:'i',ぅ:'u',ぇ:'e',ぉ:'o',ゎ:'wa',
+      ゔ:'vu'
+    };
+    const combo = {
+      きゃ:'kya',きゅ:'kyu',きょ:'kyo',しゃ:'sha',しゅ:'shu',しょ:'sho',
+      ちゃ:'cha',ちゅ:'chu',ちょ:'cho',にゃ:'nya',にゅ:'nyu',にょ:'nyo',
+      ひゃ:'hya',ひゅ:'hyu',ひょ:'hyo',みゃ:'mya',みゅ:'myu',みょ:'myo',
+      りゃ:'rya',りゅ:'ryu',りょ:'ryo',ぎゃ:'gya',ぎゅ:'gyu',ぎょ:'gyo',
+      じゃ:'ja',じゅ:'ju',じょ:'jo',ぢゃ:'ja',ぢゅ:'ju',ぢょ:'jo',
+      びゃ:'bya',びゅ:'byu',びょ:'byo',ぴゃ:'pya',ぴゅ:'pyu',ぴょ:'pyo',
+      しぇ:'she',ちぇ:'che',じぇ:'je',てぃ:'ti',でぃ:'di',
+      とぅ:'tu',どぅ:'du',ふぁ:'fa',ふぃ:'fi',ふぇ:'fe',ふぉ:'fo',
+      ふゅ:'fyu',うぃ:'wi',うぇ:'we',うぉ:'wo',ゔぁ:'va',
+      ゔぃ:'vi',ゔぇ:'ve',ゔぉ:'vo',つぁ:'tsa',つぃ:'tsi',
+      つぇ:'tse',つぉ:'tso'
+    };
+    const hiragana = normalize(value).normalize('NFKC').replace(/[ァ-ヶ]/g,
+      char => String.fromCharCode(char.charCodeAt(0) - 96));
+    let latin = '';
+    for (let i = 0; i < hiragana.length; i++) {
+      const char = hiragana[i];
+      if (char === 'っ') {
+        const syllable = combo[hiragana.slice(i + 1, i + 3)] || map[hiragana[i + 1]] || '';
+        latin += syllable.startsWith('ch') ? 't' : syllable.charAt(0);
+        continue;
+      }
+      if (char === 'ー') {
+        const vowel = latin.match(/[aeiou]$/)?.[0] || '';
+        latin += vowel;
+        continue;
+      }
+      const pair = combo[hiragana.slice(i, i + 2)];
+      if (pair) { latin += pair; i++; continue; }
+      latin += map[char] || char.toLowerCase();
+    }
+    return latin;
+  };
+  const alphabetKey = item => normalize(item.sortKey) || kanaToLatin(item.kana || item.kata);
+  const compareKotoba = (a, b) =>
+    A_Z.compare(alphabetKey(a), alphabetKey(b)) ||
+    JA.compare(normalize(a.kana || a.kata), normalize(b.kana || b.kata)) ||
+    JA.compare(normalize(a.kata), normalize(b.kata));
+  const entries = () => DATA
+    .filter(item => item.kategori === state.category)
+    .sort(compareKotoba);
 
   function element(tag, className, content) {
     const node = document.createElement(tag);
@@ -50,7 +113,7 @@
 
   function fillCategories() {
     els.category.replaceChildren();
-    CATEGORIES.forEach(label => {
+    [...CATEGORIES, ...new Set(DATA.map(item => item.kategori).filter(category => category && !CATEGORIES.includes(category)))].forEach(label => {
       const option = document.createElement('option');
       option.value = label;
       option.textContent = label;
@@ -99,7 +162,7 @@
         String(value || '').toLocaleLowerCase().includes(q))
     );
 
-    els.listTitle.textContent = state.category === '全分類' ? '全単語' : state.category;
+    els.listTitle.textContent = state.category;
     els.rows.replaceChildren();
     els.listEmpty.hidden = shown.length > 0;
     if (!shown.length) els.listEmpty.textContent =
@@ -212,8 +275,7 @@
   function renderQuiz() {
     const total = state.quizItems.length;
     const idx = state.quizIndex;
-    els.quizTitle.textContent = state.category === '全分類'
-      ? 'Tes bacaan' : 'Tes bacaan · ' + state.category;
+    els.quizTitle.textContent = 'Tes bacaan · ' + state.category;
     els.quizCount.textContent = Math.min(idx, total) + ' / ' + total;
     els.progress.style.width = (total ? Math.min(idx, total) / total * 100 : 0) + '%';
     els.quizEmpty.hidden = total !== 0;
