@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/style.css?v=20261119-11">
-  <script defer src="./data/data.js?v=20261119-12"></script>
-  <script defer src="./app.js?v=20261119-12"></script>
+  <link rel="stylesheet" href="./css/style.css?v=20261119-13">
+  <script defer src="./data/data.js?v=20261119-13"></script>
+  <script defer src="./app.js?v=20261119-13"></script>
 </head>
 <body>
   <header class="masthead">
@@ -37,8 +37,9 @@
           <span class="field__label jp" lang="ja">単語検索</span>
           <span class="search-wrap">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 5 5"/></svg>
-            <input id="searchInput" type="search" autocomplete="off" placeholder="Cari kata atau arti…">
+            <input id="searchInput" type="search" autocomplete="off" placeholder="Cari kata atau arti…" aria-describedby="searchCategories">
           </span>
+          <span id="searchCategories" class="search-categories jp" lang="ja" aria-live="polite" aria-atomic="true" hidden></span>
         </label>
       </div>
       <div class="tabs" role="tablist" aria-label="Mode belajar">
