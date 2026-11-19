@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css?v=20261119-6">
   <script defer src="./data/data.js?v=20261119-7"></script>
-  <script defer src="./app.js?v=20261119-6"></script>
+  <script defer src="./app.js?v=20261119-8"></script>
 </head>
 <body>
   <header class="masthead">
@@ -59,6 +59,11 @@
         <div id="vocabRows" class="vocab-table__body" role="rowgroup"></div>
       </div>
       <p id="listEmpty" class="empty-state" hidden>Belum ada kotoba dalam kategori ini.</p>
+      <nav id="paginationNav" class="pagination" aria-label="Navigasi halaman kosakata" hidden>
+        <button id="pagePrevious" class="pagination__button" type="button" aria-label="Halaman sebelumnya">前頁</button>
+        <span id="pageIndicator" class="pagination__indicator" aria-live="polite" aria-atomic="true">1 / 1</span>
+        <button id="pageNext" class="pagination__button" type="button" aria-label="Halaman berikutnya">次頁</button>
+      </nav>
     </section>
 
     <section id="quizPanel" class="learning-section" role="tabpanel" aria-labelledby="quizTab" hidden>
