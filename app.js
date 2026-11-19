@@ -5,7 +5,8 @@
   const DATA = Array.isArray(window.JFT_KOTOBA) ? window.JFT_KOTOBA : [];
   const CATEGORIES = [
     '動詞', '形容詞', '形容動詞', '名詞',
-    '副詞', '接続詞', '助詞', '感動詞', '表現'
+    '数量表現', '時間表現', '副詞',
+    '接続詞', '助詞', '感動詞', '表現'
   ];
   const FEEDBACK_MS = 8000;
   const PAGE_SIZE = 10;
@@ -26,7 +27,7 @@
     pageNext: $('pageNext'), pageIndicator: $('pageIndicator'),
     quizTitle: $('quizTitle'), quizCount: $('quizCount'), progress: $('progressFill'),
     quizWork: $('quizWork'), quizEmpty: $('quizEmpty'), quizFinish: $('quizFinish'),
-    quizKanji: $('quizKanji'), quizForm: $('quizForm'),
+    quizKanji: $('quizKanji'), quizContext: $('quizContext'), quizForm: $('quizForm'),
     quizAnswer: $('quizAnswer'), inputHint: $('inputHint'), restart: $('restartQuiz'),
     overlay: $('feedbackOverlay'), dialog: $('feedbackDialog'),
     feedbackSymbol: $('feedbackSymbol'), feedbackTitle: $('feedbackTitle'),
@@ -352,7 +353,19 @@
     els.quizEmpty.hidden = total !== 0;
     els.quizFinish.hidden = total === 0 || idx < total;
     els.quizWork.hidden = total === 0 || idx >= total;
-    if (idx < total) els.quizKanji.textContent = state.quizItems[idx].kata;
+    if (idx < total) {
+      const item = state.quizItems[idx];
+      els.quizKanji.textContent = item.kata;
+      const ambiguous = state.quizItems.some(other =>
+        other !== item && other.kata === item.kata && other.kana !== item.kana
+      );
+      // A single kanji can have multiple readings: show its meaning only in that case.
+      els.quizContext.hidden = !ambiguous;
+      els.quizContext.textContent = ambiguous ? item.arti : '';
+    } else {
+      els.quizContext.hidden = true;
+      els.quizContext.textContent = '';
+    }
   }
 
   const feedbackIcon = correct => correct

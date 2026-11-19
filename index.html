@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/style.css?v=20261119-6">
-  <script defer src="./data/data.js?v=20261119-7"></script>
-  <script defer src="./app.js?v=20261119-8"></script>
+  <link rel="stylesheet" href="./css/style.css?v=20261119-11">
+  <script defer src="./data/data.js?v=20261119-10"></script>
+  <script defer src="./app.js?v=20261119-11"></script>
 </head>
 <body>
   <header class="masthead">
@@ -30,8 +30,8 @@
     <section class="toolbar panel" aria-label="Kontrol belajar">
       <div class="toolbar__inputs">
         <label class="field">
-          <span class="field__label jp" lang="ja">品詞分類</span>
-          <select id="categorySelect" class="jp" lang="ja" aria-label="品詞分類"></select>
+          <span class="field__label jp" lang="ja">語彙分類</span>
+          <select id="categorySelect" class="jp" lang="ja" aria-label="語彙分類"></select>
         </label>
         <label class="field field--search">
           <span class="field__label jp" lang="ja">単語検索</span>
@@ -71,7 +71,7 @@
       <div class="quiz panel">
         <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
         <div id="quizWork">
-          <div class="kanji-card"><span class="kanji-card__hint jp" lang="ja">漢字を読んでください</span><div id="quizKanji" class="kanji-card__text jp" lang="ja"></div></div>
+          <div class="kanji-card"><span class="kanji-card__hint jp" lang="ja">漢字を読んでください</span><div id="quizKanji" class="kanji-card__text jp" lang="ja"></div><p id="quizContext" class="kanji-card__context" hidden></p></div>
           <form id="quizForm" class="quiz-form" novalidate>
             <label for="quizAnswer" class="jp" lang="ja">解答</label>
             <div class="quiz-form__controls"><input id="quizAnswer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" lang="ja" placeholder="ひらがな・カタカナで入力" enterkeyhint="done"><button type="submit" id="checkAnswer" class="primary-btn">確認</button></div>
