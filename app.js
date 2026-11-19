@@ -108,6 +108,90 @@
     .filter(item => item.kategori === state.category)
     .sort(compareKotoba);
 
+  // Only the list view for these two categories needs a learning-friendly order.
+  // Quiz and global search continue using their existing alphabetical behavior.
+  const numberedCounters = [
+    '一人', '一台', '一回', '一度', '二つ', '二階', '何人', '何枚'
+  ];
+  const timeBasics = [
+    '今', '時間', '時', '分', '半', '午前', '午後'
+  ];
+  const weekdays = [
+    '月曜日','火曜日','水曜日','木曜日','金曜日','土曜日','日曜日'
+  ];
+  const monthNames = [
+    'Januari','Februari','Maret','April','Mei','Juni',
+    'Juli','Agustus','September','Oktober','November','Desember'
+  ];
+  const timeMoments = [
+    '朝','昼','昼休み','晩','夜','今朝','今晩','昨日の晩','毎朝','毎晩'
+  ];
+  const relativeDays = ['昨日','今日','明日','毎日'];
+  const relativeWeeks = ['先週','今週','来週','週末'];
+  const relativeMonths = ['先月','今月','来月'];
+  const relativeYears = ['去年','今年','来年'];
+  const seasonsAndEvents = ['春','秋','誕生日'];
+  const durationGroups = { jam: 6, hari: 7, minggu: 8, bulan: 9, tahun: 10 };
+
+  function orderedCategoryKey(item) {
+    const label = item.arti;
+    if (state.category === '数量表現') {
+      if (/^\d[\d.]*$/.test(label)) {
+        return [0, Number(label.replace(/\./g, '')), 0];
+      }
+      const i = numberedCounters.indexOf(item.kata);
+      return i < 0 ? [99, 0, 0] : [1, i, 0];
+    }
+    if (state.category === '時間表現') {
+      const basic = timeBasics.indexOf(item.kata);
+      if (basic >= 0) {
+        // Two distinct pronunciations for 分 should remain adjacent.
+        return [0, basic, 0];
+      }
+
+      let match = /^Jam (\d+)$/.exec(label);
+      if (match) return [1, Number(match[1]), 0];
+      if (item.kata === '何時？') return [1, 99, 0];
+
+      match = /^(\d+) menit$/.exec(label);
+      if (match) return [2, Number(match[1]), 0];
+      if (item.kata === '何分？') return [2, 99, 0];
+
+      const weekday = weekdays.indexOf(item.kata);
+      if (weekday >= 0) return [3, weekday, 0];
+
+      const month = monthNames.indexOf(label);
+      if (month >= 0) return [4, month, 0];
+      if (item.kata === '何月？') return [4, 99, 0];
+
+      match = /^Tanggal (\d+)$/.exec(label);
+      if (match) return [5, Number(match[1]), 0];
+      if (item.kata === '何日？') return [5, 99, 0];
+
+      match = /^Selama (\d+(?:,\d+)?) (jam|hari|minggu|bulan|tahun)$/.exec(label);
+      if (match) return [durationGroups[match[2]], Number(match[1].replace(',', '.')), 0];
+      match = /^Selama berapa (jam|hari|minggu|bulan|tahun)\?$/.exec(label);
+      if (match) return [durationGroups[match[1]], 999, 0];
+
+      const lists = [timeMoments,relativeDays,relativeWeeks,relativeMonths,relativeYears,seasonsAndEvents];
+      for (let i = 0; i < lists.length; i++) {
+        const index = lists[i].indexOf(item.kata);
+        if (index >= 0) return [11 + i, index, 0];
+      }
+      return [99, 0, 0];
+    }
+    return [99, 0, 0];
+  }
+
+  const listEntries = () => {
+    const list = entries();
+    if (state.category !== '数量表現' && state.category !== '時間表現') return list;
+    return list.sort((a, b) => {
+      const aa = orderedCategoryKey(a), bb = orderedCategoryKey(b);
+      return aa[0] - bb[0] || aa[1] - bb[1] || aa[2] - bb[2] || compareKotoba(a, b);
+    });
+  };
+
   function element(tag, className, content) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -165,7 +249,7 @@
     // restores the currently selected dropdown category.
     const q = state.query.trim().toLocaleLowerCase();
     const isSearching = q.length > 0;
-    const all = isSearching ? [...DATA].sort(compareKotoba) : entries();
+    const all = isSearching ? [...DATA].sort(compareKotoba) : listEntries();
     const shown = isSearching ? all.filter(item =>
       [item.kata, item.kana, item.arti].some(value =>
         String(value || '').toLocaleLowerCase().includes(q))
