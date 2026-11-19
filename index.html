@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./css/style.css">
-  <script defer src="./data/data.js"></script>
-  <script defer src="./app.js"></script>
+  <link rel="stylesheet" href="./css/style.css?v=20261119-2">
+  <script defer src="./data/data.js?v=20261119-2"></script>
+  <script defer src="./app.js?v=20261119-2"></script>
 </head>
 <body>
   <header class="masthead">
@@ -49,15 +49,11 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="m8 11 2.4 2.5L16 8m-8 9h8"/></svg>読み方テスト
         </button>
       </div>
-      <div class="hints">
-        <span id="wordTotal">0 kata</span>
-        <span class="hint-audio"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Zm4 4a4 4 0 0 1 0 6m2.6-8.5a7.5 7.5 0 0 1 0 11"/></svg>Ketuk kata: suara · Panah: detail</span>
-      </div>
       <p id="audioStatus" class="audio-status" aria-live="polite"></p>
     </section>
 
     <section id="listPanel" class="learning-section" role="tabpanel" aria-labelledby="listTab">
-      <div class="section-head"><div><h2 id="listTitle" class="jp" lang="ja">全単語</h2></div><span id="listCount" class="section-count"></span></div>
+      <div class="section-head"><h2 id="listTitle" class="jp" lang="ja">全単語</h2></div>
       <div class="vocab-table" role="table" aria-label="Daftar kotoba">
         <div class="vocab-table__head jp" lang="ja" role="row"><span role="columnheader">単語</span><span role="columnheader">意味</span></div>
         <div id="vocabRows" class="vocab-table__body" role="rowgroup"></div>
