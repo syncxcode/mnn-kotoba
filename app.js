@@ -18,7 +18,7 @@
   const $ = id => document.getElementById(id);
 
   const els = {
-    category: $('categorySelect'), search: $('searchInput'),
+    category: $('categorySelect'), search: $('searchInput'), searchCategories: $('searchCategories'),
     listTab: $('listTab'), quizTab: $('quizTab'),
     listPanel: $('listPanel'), quizPanel: $('quizPanel'),
     rows: $('vocabRows'),
@@ -161,22 +161,39 @@
   const expandSvg = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10V3m-4 4 4-4 4 4M12 14v7m-4-4 4 4 4-4"/></svg>';
 
   function renderList() {
-    const all = entries();
-    const q = state.query.toLocaleLowerCase();
-    const shown = all.filter(item =>
+    // Nonempty search queries look through every category; an empty search
+    // restores the currently selected dropdown category.
+    const q = state.query.trim().toLocaleLowerCase();
+    const isSearching = q.length > 0;
+    const all = isSearching ? [...DATA].sort(compareKotoba) : entries();
+    const shown = isSearching ? all.filter(item =>
       [item.kata, item.kana, item.arti].some(value =>
         String(value || '').toLocaleLowerCase().includes(q))
-    );
+    ) : all;
+
+    // Show all matching category names directly beneath the search input,
+    // independent of which ten results happen to be visible on this page.
+    els.searchCategories.hidden = !isSearching;
+    if (isSearching) {
+      const matches = new Set(shown.map(item => item.kategori));
+      const ordered = [
+        ...CATEGORIES.filter(name => matches.has(name)),
+        ...[...matches].filter(name => !CATEGORIES.includes(name)).sort((a, b) => JA.compare(a, b))
+      ];
+      els.searchCategories.textContent = ordered.length ? ordered.join(' • ') : '該当なし';
+    } else {
+      els.searchCategories.textContent = '';
+    }
 
     const pageCount = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
     state.page = Math.max(0, Math.min(state.page, pageCount - 1));
     const pageItems = shown.slice(state.page * PAGE_SIZE, (state.page + 1) * PAGE_SIZE);
 
-    els.listTitle.textContent = state.category;
+    els.listTitle.textContent = isSearching ? '検索結果' : state.category;
     els.rows.replaceChildren();
     els.listEmpty.hidden = shown.length > 0;
     if (!shown.length) els.listEmpty.textContent =
-      all.length ? 'Tidak ada kata yang cocok.' : 'Belum ada kotoba dalam kategori ini.';
+      isSearching ? 'Tidak ada kata yang cocok.' : 'Belum ada kotoba dalam kategori ini.';
 
     // No pagination needed for empty lists or categories with ten words or fewer.
     els.pagination.hidden = pageCount <= 1;
