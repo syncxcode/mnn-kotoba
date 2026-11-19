@@ -113,7 +113,9 @@
 
   function fillCategories() {
     els.category.replaceChildren();
-    [...CATEGORIES, ...new Set(DATA.map(item => item.kategori).filter(category => category && !CATEGORIES.includes(category)))].forEach(label => {
+    // Tampilkan hanya kategori yang benar-benar berisi kotoba.
+    const available = new Set(DATA.map(item => item.kategori).filter(Boolean));
+    [...CATEGORIES.filter(label => available.has(label)), ...[...available].filter(label => !CATEGORIES.includes(label))].forEach(label => {
       const option = document.createElement('option');
       option.value = label;
       option.textContent = label;
