@@ -494,3 +494,18 @@ html.meaning-open body { position: fixed; width: 100%; }
 /* Clarify homographs with different readings in quiz without showing kana. */
 .kanji-card__context { margin: 0; color: #e6bab0; font-size: .89rem; line-height: 1.5; }
 .kanji-card__context[hidden] { display: none; }
+
+
+/* Search globally across every category, show matching categories in the search field. */
+.search-categories {
+  display: block;
+  min-width: 0;
+  margin: 1px 0 0;
+  color: #efad95;
+  font-family: var(--jp);
+  font-size: .87rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  letter-spacing: .02em;
+}
+.search-categories[hidden] { display: none; }
