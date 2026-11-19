@@ -1,342 +1,350 @@
-/* MNN Kotoba — vanilla JS, no build tools. */
+/* JFT 「言葉」 — kategori kotoba, suara, popup, dan tes bacaan. */
 (() => {
   'use strict';
-  const REVEAL_MS = 2000;
-  const COOLDOWN_MS = 10000;
-  const FEEDBACK_MS = 10000;
-  const DATA = window.MNN_KOTOBA || {};
+
+  const DATA = Array.isArray(window.JFT_KOTOBA) ? window.JFT_KOTOBA : [];
+  const CATEGORIES = [
+    '全分類', '動詞', '形容詞', '形容動詞', '名詞',
+    '副詞', '接続詞', '助詞', '感動詞', '表現'
+  ];
+  const FEEDBACK_MS = 8000;
+  const kanaRegex = /^[\p{Script=Hiragana}\p{Script=Katakana}ー\s]+$/u;
+  const hasKanji = value => /\p{Script=Han}/u.test(value || '');
+  const normalize = value => String(value || '').normalize('NFC').trim();
   const $ = id => document.getElementById(id);
+
   const els = {
-    chapter: $('chapterSelect'), search: $('searchInput'), listTab: $('listTab'), quizTab: $('quizTab'),
-    listPanel: $('listPanel'), quizPanel: $('quizPanel'), total: $('wordTotal'), rows: $('vocabRows'),
+    category: $('categorySelect'), search: $('searchInput'),
+    listTab: $('listTab'), quizTab: $('quizTab'),
+    listPanel: $('listPanel'), quizPanel: $('quizPanel'),
+    total: $('wordTotal'), rows: $('vocabRows'),
     listTitle: $('listTitle'), listCount: $('listCount'), listEmpty: $('listEmpty'),
     quizTitle: $('quizTitle'), quizCount: $('quizCount'), progress: $('progressFill'),
     quizWork: $('quizWork'), quizEmpty: $('quizEmpty'), quizFinish: $('quizFinish'),
-    quizKanji: $('quizKanji'), quizForm: $('quizForm'), quizAnswer: $('quizAnswer'),
-    inputHint: $('inputHint'), check: $('checkAnswer'), restart: $('restartQuiz'),
-    overlay: $('feedbackOverlay'), dialog: $('feedbackDialog'), feedbackSymbol: $('feedbackSymbol'),
-    feedbackTitle: $('feedbackTitle'), feedbackDesc: $('feedbackDescription'), feedbackAttempts: $('feedbackAttempts'),
-    meaningOverlay: $('meaningOverlay'), meaningDialog: $('meaningDialog'), meaningTitle: $('meaningTitle'), meaningFull: $('meaningFull'), closeMeaning: $('closeMeaning')
+    quizKanji: $('quizKanji'), quizForm: $('quizForm'),
+    quizAnswer: $('quizAnswer'), inputHint: $('inputHint'), restart: $('restartQuiz'),
+    overlay: $('feedbackOverlay'), dialog: $('feedbackDialog'),
+    feedbackSymbol: $('feedbackSymbol'), feedbackTitle: $('feedbackTitle'),
+    feedbackDesc: $('feedbackDescription'), feedbackAttempts: $('feedbackAttempts'),
+    meaningOverlay: $('meaningOverlay'), meaningDialog: $('meaningDialog'),
+    meaningTitle: $('meaningTitle'), meaningFull: $('meaningFull'),
+    closeMeaning: $('closeMeaning'), audioStatus: $('audioStatus')
   };
-  const state = { chapter: 1, tab: 'list', query: '', quizItems: [], quizIndex: 0, mistakes: 0, composing: false, popupTimer: 0, popupAction: null };
-  // Cooldowns persist for the page session even if search/bab/tab changes.
-  const kanaCooldowns = new Map(); // key -> { revealUntil, cooldownUntil }
-  const runningTimers = new Set();
-  const kanaRegex = /^[\p{Script=Hiragana}\p{Script=Katakana}ー\s]+$/u;
-  const hasKanji = str => /\p{Script=Han}/u.test(str || '');
-  const normalize = text => String(text || '').normalize('NFC').trim();
-  const entries = chapter => Array.isArray(DATA[chapter]) ? DATA[chapter] : [];
-  const itemKey = (chapter, index) => `${chapter}:${index}`;
-  function refreshChapterOptions() {
-    for (let chapter = 1; chapter <= 50; chapter++) {
-      const opt = document.createElement('option');
-      opt.value = chapter;
-      opt.textContent = `Bab ${chapter} · ${entries(chapter).length} kata`;
-      els.chapter.appendChild(opt);
-    }
-  }
-  function safeNode(tag, className, text) {
+
+  const state = {
+    category: '全分類', tab: 'list', query: '',
+    quizItems: [], quizIndex: 0, mistakes: 0,
+    composing: false, popupTimer: 0, popupAction: null
+  };
+
+  const entries = () => DATA.filter(item =>
+    state.category === '全分類' || item.kategori === state.category
+  );
+
+  function element(tag, className, content) {
     const node = document.createElement(tag);
     if (className) node.className = className;
-    if (text !== undefined) node.textContent = text;
+    if (content !== undefined) node.textContent = content;
     return node;
   }
-  function speak(text) {
-    if (!('speechSynthesis' in window) || !text) return;
-    try {
-      speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ja-JP'; utterance.rate = .88;
-      speechSynthesis.speak(utterance);
-    } catch (_) { /* Audio is an optional browser capability. */ }
+
+  function fillCategories() {
+    els.category.replaceChildren();
+    CATEGORIES.forEach(label => {
+      const option = document.createElement('option');
+      option.value = label;
+      option.textContent = label;
+      els.category.appendChild(option);
+    });
+    els.category.value = state.category;
   }
-  function createCell(value, extra) { return safeNode('div', `cell ${extra}`, value); }
+
+  function announceAudio(message) {
+    if (!els.audioStatus) return;
+    els.audioStatus.textContent = message;
+  }
+
+  function speak(item, button) {
+    button.classList.remove('word-speak--active');
+    // Restart the tiny tap animation on every press, without changing layout.
+    void button.offsetWidth;
+    button.classList.add('word-speak--active');
+    button.addEventListener('animationend', () =>
+      button.classList.remove('word-speak--active'), { once: true });
+
+    if (!('speechSynthesis' in window)) {
+      announceAudio('Suara Jepang tidak tersedia pada browser ini.');
+      return;
+    }
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(item.kana || item.kata);
+      utterance.lang = 'ja-JP';
+      utterance.rate = 0.88;
+      utterance.onerror = () => announceAudio('Pengucapan gagal. Periksa suara Jepang di perangkat.');
+      utterance.onstart = () => announceAudio('');
+      window.speechSynthesis.speak(utterance);
+    } catch (_) {
+      announceAudio('Pengucapan tidak tersedia di perangkat ini.');
+    }
+  }
+
+  const expandSvg = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10V3m-4 4 4-4 4 4M12 14v7m-4-4 4 4 4-4"/></svg>';
+
   function renderList() {
-    const chapter = state.chapter;
-    const all = entries(chapter);
-    const search = state.query.toLocaleLowerCase();
-    const matched = all.map((item, idx) => ({ item, idx }))
-      .filter(({item}) => [item.kana, item.kanji, item.arti].some(v => String(v || '').toLocaleLowerCase().includes(search)));
-    els.listTitle.textContent = `Bab ${chapter} · Kotoba`;
-    els.total.textContent = `${all.length} kata`;
-    els.listCount.textContent = `${matched.length} dari ${all.length} kata`;
-    els.listEmpty.hidden = matched.length !== 0;
-    if (!matched.length) els.listEmpty.textContent = all.length ? 'Tidak ada kata yang cocok.' : 'Belum ada data kotoba pada bab ini.';
+    const all = entries();
+    const q = state.query.toLocaleLowerCase();
+    const shown = all.filter(item =>
+      [item.kata, item.kana, item.arti].some(value =>
+        String(value || '').toLocaleLowerCase().includes(q))
+    );
+
+    els.listTitle.textContent = state.category === '全分類' ? '全単語' : state.category;
+    els.total.textContent = DATA.length + ' kata';
+    els.listCount.textContent = shown.length + ' dari ' + all.length + ' kata';
     els.rows.replaceChildren();
+    els.listEmpty.hidden = shown.length > 0;
+    if (!shown.length) els.listEmpty.textContent =
+      all.length ? 'Tidak ada kata yang cocok.' : 'Belum ada kotoba dalam kategori ini.';
+
     const fragment = document.createDocumentFragment();
-    matched.forEach(({item, idx}) => {
-      const row = safeNode('div', 'vocab-row');
+    shown.forEach(item => {
+      const row = element('div', 'vocab-row');
       row.setAttribute('role', 'row');
-      const isKanji = hasKanji(item.kanji);
-      const kanaCell = createCell('', isKanji ? 'cell--kana cell--blurred cell--interactive' : 'cell--kana');
-      kanaCell.setAttribute('role', 'cell');
-      const span = safeNode('span', 'kana-text', item.kana || '');
-      kanaCell.appendChild(span);
-      if (isKanji) {
-        kanaCell.tabIndex = 0;
-        kanaCell.setAttribute('role', 'button');
-        const cd = safeNode('span', 'cooldown-track');
-        kanaCell.appendChild(cd);
-        const key = itemKey(chapter, idx);
-        const activate = () => revealKana(key, kanaCell, cd);
-        kanaCell.addEventListener('click', activate);
-        kanaCell.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); activate(); } });
-        updateKanaState(key, kanaCell, cd);
-      }
-      const kanjiCell = createCell(isKanji ? item.kanji : '', `cell--kanji ${isKanji ? 'cell--interactive' : 'cell--empty'}`);
-      kanjiCell.setAttribute('role', 'cell');
-      if (isKanji) {
-        kanjiCell.tabIndex = 0;
-        kanjiCell.setAttribute('role', 'button');
-        kanjiCell.setAttribute('aria-label', `Dengarkan ${item.kanji}`);
-        kanjiCell.addEventListener('click', () => speak(item.kana));
-        kanjiCell.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); speak(item.kana); } });
-      }
-      const meaningCell = createCell('', 'cell--meaning');
-      const meaningText = safeNode('span', 'meaning-text', item.arti || '');
-      meaningCell.appendChild(meaningText);
+
+      const wordCell = element('div', 'cell cell--word jp');
+      wordCell.setAttribute('role', 'cell');
+      wordCell.lang = 'ja';
+
+      const wordButton = element('button', 'word-speak', item.kata || item.kana);
+      wordButton.type = 'button';
+      wordButton.lang = 'ja';
+      wordButton.setAttribute('aria-label', 'Dengarkan ' + (item.kata || item.kana));
+      wordButton.addEventListener('click', () => speak(item, wordButton));
+
+      const expandButton = element('button', 'word-expand');
+      expandButton.type = 'button';
+      expandButton.innerHTML = expandSvg;
+      expandButton.setAttribute('aria-label', 'Bentangkan ' + (item.kata || item.kana));
+      expandButton.title = 'Lihat kata dan arti lengkap';
+      expandButton.addEventListener('click', () => openMeaning(item));
+
+      wordCell.append(wordButton, expandButton);
+      const meaningCell = element('div', 'cell cell--meaning');
       meaningCell.setAttribute('role', 'cell');
-      if (item.arti) {
-        // Only open a popup when this text is actually truncated on this screen.
-        const isClamped = () => meaningText.scrollHeight > meaningText.clientHeight + 1;
-        const openIfLong = () => {
-          if (isClamped()) openMeaning(item);
-        };
-        meaningCell.addEventListener('click', openIfLong);
-        meaningCell.addEventListener('keydown', ev => {
-          if ((ev.key === 'Enter' || ev.key === ' ') && isClamped()) {
-            ev.preventDefault(); openMeaning(item);
-          }
-        });
-        const updateMeaningAccess = () => {
-          const truncated = isClamped();
-          meaningCell.classList.toggle('cell--meaning-expandable', truncated);
-          if (truncated) {
-            meaningCell.tabIndex = 0;
-            meaningCell.setAttribute('role', 'button');
-            meaningCell.setAttribute('aria-label', 'Buka arti lengkap: ' + (item.kanji || item.kana));
-          } else {
-            meaningCell.removeAttribute('tabindex');
-            meaningCell.setAttribute('role', 'cell');
-            meaningCell.removeAttribute('aria-label');
-          }
-        };
-        requestAnimationFrame(updateMeaningAccess);
-      }
-      row.append(kanaCell, kanjiCell, meaningCell);
+      meaningCell.appendChild(element('span', 'meaning-text', item.arti || ''));
+      row.append(wordCell, meaningCell);
       fragment.appendChild(row);
     });
     els.rows.appendChild(fragment);
   }
-  let meaningPreviousFocus = null;
-  let meaningScrollState = null;
-  function lockMeaningScroll() {
-    if (meaningScrollState) return;
+
+  let previousFocus = null;
+  let scrollState = null;
+  function lockScroll() {
+    if (scrollState) return;
     const body = document.body;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    const paddingRight = parseFloat(getComputedStyle(body).paddingRight) || 0;
-    meaningScrollState = {
+    const width = window.innerWidth - document.documentElement.clientWidth;
+    const padding = parseFloat(getComputedStyle(body).paddingRight) || 0;
+    scrollState = {
       x: window.scrollX, y: window.scrollY,
-      styles: ['top', 'left', 'padding-right'].map(property =>
-        [property, body.style.getPropertyValue(property), body.style.getPropertyPriority(property)])
+      styles: ['top', 'left', 'padding-right'].map(prop =>
+        [prop, body.style.getPropertyValue(prop), body.style.getPropertyPriority(prop)])
     };
-    // A fixed body also locks touch scrolling on mobile browsers.
-    body.style.top = `${-meaningScrollState.y}px`;
-    body.style.left = `${-meaningScrollState.x}px`;
-    body.style.paddingRight = `${paddingRight + scrollbarWidth}px`;
+    body.style.top = -scrollState.y + 'px';
+    body.style.left = -scrollState.x + 'px';
+    body.style.paddingRight = padding + width + 'px';
     document.documentElement.classList.add('meaning-open');
   }
-  function unlockMeaningScroll() {
-    if (!meaningScrollState) return;
-    const { x, y, styles } = meaningScrollState;
+  function unlockScroll() {
+    if (!scrollState) return;
+    const { x, y, styles } = scrollState;
     document.documentElement.classList.remove('meaning-open');
-    for (const [property, value, priority] of styles) {
-      if (value) document.body.style.setProperty(property, value, priority);
-      else document.body.style.removeProperty(property);
+    for (const [prop, value, priority] of styles) {
+      if (value) document.body.style.setProperty(prop, value, priority);
+      else document.body.style.removeProperty(prop);
     }
-    meaningScrollState = null;
-    // Restore immediately even if the page uses smooth scrolling.
-    window.scrollTo({ left: x, top: y, behavior: 'instant' });
+    scrollState = null;
+    window.scrollTo(x, y);
   }
   function openMeaning(item) {
-    if (!els.meaningOverlay || !els.meaningDialog || !els.meaningOverlay.hidden) return;
-    meaningPreviousFocus = document.activeElement;
-    els.meaningTitle.textContent = item.kanji || item.kana;
+    if (!els.meaningOverlay.hidden) return;
+    previousFocus = document.activeElement;
+    els.meaningTitle.textContent = item.kata || item.kana;
     els.meaningFull.textContent = item.arti || '';
-    lockMeaningScroll();
+    lockScroll();
     els.meaningOverlay.hidden = false;
     els.meaningDialog.scrollTop = 0;
-    els.closeMeaning.focus({preventScroll: true});
+    els.closeMeaning.focus({ preventScroll: true });
   }
   function closeMeaning() {
-    if (!els.meaningOverlay || els.meaningOverlay.hidden) return;
+    if (els.meaningOverlay.hidden) return;
     els.meaningOverlay.hidden = true;
-    unlockMeaningScroll();
-    if (meaningPreviousFocus?.isConnected) meaningPreviousFocus.focus({preventScroll: true});
-    meaningPreviousFocus = null;
+    unlockScroll();
+    if (previousFocus && previousFocus.isConnected)
+      previousFocus.focus({ preventScroll: true });
+    previousFocus = null;
   }
-  function updateKanaState(key, cell, bar) {
-    const now = Date.now(); const timing = kanaCooldowns.get(key);
-    cell.classList.remove('cell--blurred', 'cell--revealed', 'cell--cooldown');
-    if (timing && now < timing.revealUntil) {
-      cell.classList.add('cell--revealed');
-      cell.setAttribute('aria-label', 'Kana terbuka');
-      bar.style.transform = 'scaleX(0)';
-    } else if (timing && now < timing.cooldownUntil) {
-      cell.classList.add('cell--cooldown');
-      cell.setAttribute('aria-label', 'Kana sedang cooldown');
-      const percent = (now - timing.revealUntil) / COOLDOWN_MS;
-      bar.style.transform = `scaleX(${Math.min(1, Math.max(0, percent))})`;
-    } else {
-      kanaCooldowns.delete(key);
-      cell.classList.add('cell--blurred');
-      cell.setAttribute('aria-label', 'Tap untuk membuka kana');
-      bar.style.transform = 'scaleX(0)';
-    }
-  }
-  function revealKana(key, cell, bar) {
-    const now = Date.now(), old = kanaCooldowns.get(key);
-    if (old && now < old.cooldownUntil) return;
-    kanaCooldowns.set(key, { revealUntil: now + REVEAL_MS, cooldownUntil: now + REVEAL_MS + COOLDOWN_MS });
-    updateKanaState(key, cell, bar);
-    // Restrict interval work to the clicked cell. No global animation loop.
-    const timer = window.setInterval(() => {
-      if (!cell.isConnected) { clearInterval(timer); runningTimers.delete(timer); return; }
-      updateKanaState(key, cell, bar);
-      if (!kanaCooldowns.has(key)) { clearInterval(timer); runningTimers.delete(timer); }
-    }, 100);
-    runningTimers.add(timer);
-  }
-  function clearDomTimers() { for (const timer of runningTimers) clearInterval(timer); runningTimers.clear(); }
-  function switchTab(target) {
+
+  function switchTab(tab) {
     closeFeedback(false);
-    state.tab = target;
-    const list = target === 'list';
-    els.listPanel.hidden = !list; els.quizPanel.hidden = list;
-    els.listTab.classList.toggle('is-active', list);
-    els.quizTab.classList.toggle('is-active', !list);
-    els.listTab.setAttribute('aria-selected', String(list));
-    els.quizTab.setAttribute('aria-selected', String(!list));
-    els.search.closest('.field').hidden = !list;
-    if (!list) resetQuiz();
+    closeMeaning();
+    state.tab = tab;
+    const onList = tab === 'list';
+    els.listPanel.hidden = !onList;
+    els.quizPanel.hidden = onList;
+    els.listTab.classList.toggle('is-active', onList);
+    els.quizTab.classList.toggle('is-active', !onList);
+    els.listTab.setAttribute('aria-selected', String(onList));
+    els.quizTab.setAttribute('aria-selected', String(!onList));
+    els.search.closest('.field').hidden = !onList;
+    if (!onList) resetQuiz();
   }
+
   function resetQuiz() {
-    state.quizItems = entries(state.chapter).filter(item => hasKanji(item.kanji) && normalize(item.kana));
-    state.quizIndex = 0; state.mistakes = 0;
+    state.quizItems = entries().filter(item =>
+      hasKanji(item.kata) && kanaRegex.test(normalize(item.kana))
+    );
+    state.quizIndex = 0;
+    state.mistakes = 0;
     els.quizAnswer.value = '';
-    els.inputHint.textContent = 'Jawab dengan kana sesuai bacaan di data. Romaji tidak diterima.';
+    els.inputHint.textContent = 'Jawab dengan kana. Romaji tidak diterima.';
     renderQuiz();
   }
   function renderQuiz() {
-    const total = state.quizItems.length, idx = state.quizIndex;
-    els.quizTitle.textContent = `Tes bacaan · Bab ${state.chapter}`;
-    els.quizCount.textContent = `${Math.min(idx,total)} / ${total}`;
-    els.progress.style.width = `${total ? 100 * Math.min(idx,total) / total : 0}%`;
+    const total = state.quizItems.length;
+    const idx = state.quizIndex;
+    els.quizTitle.textContent = state.category === '全分類'
+      ? 'Tes bacaan' : 'Tes bacaan · ' + state.category;
+    els.quizCount.textContent = Math.min(idx, total) + ' / ' + total;
+    els.progress.style.width = (total ? Math.min(idx, total) / total * 100 : 0) + '%';
     els.quizEmpty.hidden = total !== 0;
     els.quizFinish.hidden = total === 0 || idx < total;
     els.quizWork.hidden = total === 0 || idx >= total;
-    if (idx < total) els.quizKanji.textContent = state.quizItems[idx].kanji;
+    if (idx < total) els.quizKanji.textContent = state.quizItems[idx].kata;
   }
-  const svgIcon = success => success ?
-    '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="24" cy="24" r="20" stroke="#16A34A" stroke-width="3.5"/><path d="m14 24 7 7 13-15" stroke="#16A34A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>' :
-    '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="24" cy="24" r="20" stroke="#DC2626" stroke-width="3.5"/><path d="M17 17 31 31M31 17 17 31" stroke="#DC2626" stroke-width="4" stroke-linecap="round"/></svg>';
-  function feedback(isCorrect, thirdWrong) {
+
+  const feedbackIcon = correct => correct
+    ? '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="20" stroke="#16A34A" stroke-width="3.5"/><path d="m14 24 7 7 13-15" stroke="#16A34A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    : '<svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="24" cy="24" r="20" stroke="#DC2626" stroke-width="3.5"/><path d="M17 17 31 31M31 17 17 31" stroke="#DC2626" stroke-width="4" stroke-linecap="round"/></svg>';
+
+  function feedback(correct, thirdWrong) {
     closeFeedback(false);
-    // Tutup keyboard virtual sebelum popup; fokus baru hanya saat user mengetuk input.
     els.quizAnswer.blur();
     state.popupAction = () => {
-      if (isCorrect) { state.quizIndex++; state.mistakes = 0; els.quizAnswer.value = ''; renderQuiz(); }
-      else if (thirdWrong) switchTab('list');
-      else { els.quizAnswer.value = ''; }
+      if (correct) {
+        state.quizIndex++;
+        state.mistakes = 0;
+        els.quizAnswer.value = '';
+        renderQuiz();
+      } else if (thirdWrong) switchTab('list');
+      else els.quizAnswer.value = '';
     };
-    els.dialog.classList.toggle('feedback--correct', isCorrect);
-    els.dialog.classList.toggle('feedback--wrong', !isCorrect);
-    els.feedbackSymbol.innerHTML = svgIcon(isCorrect);
-    els.feedbackTitle.textContent = isCorrect ? '正解です！' : '違います';
-    els.feedbackDesc.textContent = isCorrect ? 'Jawaban benar!' : thirdWrong ? 'Tiga kali salah. Kembali ke daftar kotoba untuk review.' : 'Silakan coba lagi!';
-    els.feedbackAttempts.textContent = isCorrect ? '' : `Kesalahan ${state.mistakes}/3`;
+    els.dialog.classList.toggle('feedback--correct', correct);
+    els.dialog.classList.toggle('feedback--wrong', !correct);
+    els.feedbackSymbol.innerHTML = feedbackIcon(correct);
+    els.feedbackTitle.textContent = correct ? '正解です！' : '違います';
+    els.feedbackDesc.textContent = correct ? 'Jawaban benar!' :
+      thirdWrong ? 'Tiga kali salah. Kembali ke daftar kotoba untuk review.' : 'Silakan coba lagi!';
+    els.feedbackAttempts.textContent = correct ? '' : 'Kesalahan ' + state.mistakes + '/3';
     els.overlay.hidden = false;
     document.body.style.overflow = 'hidden';
-    els.dialog.focus({preventScroll:true});
-    state.popupTimer = setTimeout(() => closeFeedback(true), FEEDBACK_MS);
+    els.dialog.focus({ preventScroll: true });
+    state.popupTimer = window.setTimeout(() => closeFeedback(true), FEEDBACK_MS);
   }
-  function closeFeedback(performAction) {
+  function closeFeedback(doAction) {
     if (state.popupTimer) clearTimeout(state.popupTimer);
     state.popupTimer = 0;
-    const action = state.popupAction; state.popupAction = null;
+    const action = state.popupAction;
+    state.popupAction = null;
     els.overlay.hidden = true;
     document.body.style.overflow = '';
-    if (performAction && typeof action === 'function') action();
+    if (doAction && typeof action === 'function') action();
   }
-  function isKanaOnly(value) { return kanaRegex.test(value); }
+
+  function validateAnswer() {
+    const value = els.quizAnswer.value;
+    if (!value.trim() || kanaRegex.test(normalize(value))) {
+      els.inputHint.textContent = 'Jawab dengan kana. Romaji tidak diterima.';
+      return;
+    }
+    const cursor = els.quizAnswer.selectionStart;
+    els.quizAnswer.value = value.replace(/[A-Za-z0-9]/g, '');
+    try { els.quizAnswer.setSelectionRange(
+      Math.min(cursor, els.quizAnswer.value.length),
+      Math.min(cursor, els.quizAnswer.value.length)
+    ); } catch (_) {}
+    els.inputHint.textContent = 'Gunakan keyboard bahasa Jepang.';
+  }
   function handleAnswer(event) {
     event.preventDefault();
     if (state.composing || !els.overlay.hidden || !state.quizItems[state.quizIndex]) return;
     const answer = normalize(els.quizAnswer.value);
-    if (!answer) { els.inputHint.textContent = 'Isi jawaban dengan kana terlebih dahulu.'; return; }
-    if (!isKanaOnly(answer)) {
-      els.inputHint.textContent = 'Gunakan keyboard Jepang. Romaji tidak diterima.';
-      return; // Invalid input does not count as a mistake.
+    if (!answer) {
+      els.inputHint.textContent = 'Isi jawaban terlebih dahulu.';
+      return;
+    }
+    if (!kanaRegex.test(answer)) {
+      els.inputHint.textContent = 'Gunakan huruf kana, bukan romaji.';
+      return;
     }
     const expected = normalize(state.quizItems[state.quizIndex].kana);
     if (answer === expected) feedback(true, false);
-    else { state.mistakes += 1; feedback(false, state.mistakes >= 3); }
+    else {
+      state.mistakes++;
+      feedback(false, state.mistakes >= 3);
+    }
   }
-  function changeChapter() {
-    const parsed = Number(els.chapter.value);
-    if (parsed < 1 || parsed > 50) return;
-    closeFeedback(false); clearDomTimers();
-    state.chapter = parsed;
-    els.search.value = ''; state.query = '';
-    renderList(); resetQuiz();
-  }
+
   function attach() {
-    refreshChapterOptions();
-    els.chapter.value = '1';
-    els.chapter.addEventListener('change', changeChapter);
-    els.search.addEventListener('input', () => { state.query = els.search.value.trim(); clearDomTimers(); renderList(); });
+    fillCategories();
+    els.category.addEventListener('change', () => {
+      state.category = els.category.value;
+      state.query = '';
+      els.search.value = '';
+      closeMeaning();
+      closeFeedback(false);
+      renderList();
+      resetQuiz();
+    });
+    els.search.addEventListener('input', () => {
+      state.query = els.search.value.trim();
+      renderList();
+    });
     els.listTab.addEventListener('click', () => switchTab('list'));
     els.quizTab.addEventListener('click', () => switchTab('quiz'));
     els.quizForm.addEventListener('submit', handleAnswer);
     els.quizAnswer.addEventListener('compositionstart', () => { state.composing = true; });
-    els.quizAnswer.addEventListener('compositionend', () => { state.composing = false; validateInputDisplay(); });
-    els.quizAnswer.addEventListener('input', () => { if (!state.composing) validateInputDisplay(); });
+    els.quizAnswer.addEventListener('compositionend', () => {
+      state.composing = false;
+      validateAnswer();
+    });
+    els.quizAnswer.addEventListener('input', () => {
+      if (!state.composing) validateAnswer();
+    });
     els.restart.addEventListener('click', resetQuiz);
-    els.overlay.addEventListener('click', event => { if (event.target === els.overlay) closeFeedback(true); });
-    els.meaningOverlay.addEventListener('click', event => { if (event.target === els.meaningOverlay) closeMeaning(); });
+    els.overlay.addEventListener('click', event => {
+      if (event.target === els.overlay) closeFeedback(true);
+    });
+    els.meaningOverlay.addEventListener('click', event => {
+      if (event.target === els.meaningOverlay) closeMeaning();
+    });
     els.closeMeaning.addEventListener('click', closeMeaning);
     document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && !els.meaningOverlay.hidden) {
-        event.preventDefault(); closeMeaning();
+      if (!els.meaningOverlay.hidden) {
+        if (event.key === 'Escape') { event.preventDefault(); closeMeaning(); }
+        // Only the close button is focusable inside the meaning dialog.
+        if (event.key === 'Tab') { event.preventDefault(); els.closeMeaning.focus(); }
+      } else if (event.key === 'Escape' && !els.overlay.hidden) {
+        event.preventDefault();
+        closeFeedback(true);
       }
     });
-    // Escape also closes the popup for desktop keyboard accessibility.
-    document.addEventListener('keydown', event => { if (event.key === 'Escape' && !els.overlay.hidden) { event.preventDefault(); closeFeedback(true); } });
-    renderList(); resetQuiz();
+    renderList();
+    resetQuiz();
   }
-  function validateInputDisplay() {
-    const value = els.quizAnswer.value;
-    if (!value.trim() || isKanaOnly(normalize(value))) {
-      els.inputHint.textContent = 'Jawab dengan kana sesuai bacaan di data. Romaji tidak diterima.';
-      return;
-    }
-    // Do not strip romaji DURING IME composition; it would break Japanese keyboards.
-    // Strip Latin input on finalized edits, including paste, leaving Japanese kana untouched.
-    const pos = els.quizAnswer.selectionStart;
-    els.quizAnswer.value = value.replace(/[A-Za-z0-9]/g, '');
-    try { els.quizAnswer.setSelectionRange(Math.min(pos, els.quizAnswer.value.length), Math.min(pos, els.quizAnswer.value.length)); } catch (_) {}
-    els.inputHint.textContent = 'Hanya huruf kana. Ganti keyboard ke bahasa Jepang.';
-  }
-  // Lightweight anti-selection/copy UX; not a DRM or source-code protection mechanism.
-  document.addEventListener('copy', event => event.preventDefault());
-  document.addEventListener('cut', event => event.preventDefault());
-  document.addEventListener('dragstart', event => event.preventDefault());
-  document.addEventListener('selectstart', event => {
-    if (!(event.target instanceof Element) || !event.target.closest('input, textarea, [contenteditable]')) event.preventDefault();
-  });
-  document.addEventListener('contextmenu', event => {
-    if (!(event.target instanceof Element) || !event.target.closest('input, textarea, [contenteditable]')) event.preventDefault();
-  });
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', attach);
+
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', attach);
   else attach();
 })();

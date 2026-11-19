@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f0d0d">
-  <meta name="description" content="みんなの日本語「言葉」 — kosakata dan tes bacaan Bab 1–50.">
-  <title>みんなの日本語「言葉」</title>
+  <meta name="description" content="JFT 「言葉」 — kosakata bahasa Jepang dengan kategori, audio, dan tes bacaan.">
+  <title>JFT 「言葉」</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Shippori+Mincho:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
   <script defer src="./data/data.js"></script>
   <script defer src="./app.js"></script>
@@ -20,12 +20,9 @@
     <div class="masthead__kanji masthead__kanji--two" aria-hidden="true">学</div>
     <div class="shell masthead__content">
       <div class="brand">
-        <span class="brand__mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.2c-2.2-1.3-5.2-1.6-8-.8v13.1c2.8-.8 5.8-.5 8 .8 2.2-1.3 5.2-1.6 8-.8V5.4c-2.8-.8-5.8-.5-8 .8Z"/><path d="M12 6.2v13.1M6.7 9h2.5M6.7 12h2.5m5.6-3h2.5m-2.5 3h2.5"/></svg>
-        </span>
-        <span class="brand__name jp" lang="ja">みんなの日本語<span class="accent">「言葉」</span></span>
+        <span class="brand__mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.2c-2.2-1.3-5.2-1.6-8-.8v13.1c2.8-.8 5.8-.5 8 .8 2.2-1.3 5.2-1.6 8-.8V5.4c-2.8-.8-5.8-.5-8 .8Z"/><path d="M12 6.2v13.1M6.7 9h2.5M6.7 12h2.5m5.6-3h2.5m-2.5 3h2.5"/></svg></span>
+        <span class="brand__name jp" lang="ja">JFT <span class="accent">「言葉」</span></span>
       </div>
-      <p class="eyebrow">MINNA NO NIHONGO · BAB 1–50</p>
     </div>
   </header>
 
@@ -33,73 +30,73 @@
     <section class="toolbar panel" aria-label="Kontrol belajar">
       <div class="toolbar__inputs">
         <label class="field">
-          <span class="field__label">Pilih bab</span>
-          <select id="chapterSelect" aria-label="Pilih bab"></select>
+          <span class="field__label jp" lang="ja">品詞分類</span>
+          <select id="categorySelect" class="jp" lang="ja" aria-label="品詞分類"></select>
         </label>
         <label class="field field--search">
-          <span class="field__label">Cari kotoba</span>
+          <span class="field__label jp" lang="ja">単語検索</span>
           <span class="search-wrap">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 5 5"/></svg>
-            <input id="searchInput" type="search" autocomplete="off" placeholder="Cari kana, kanji, atau arti…">
+            <input id="searchInput" type="search" autocomplete="off" placeholder="Cari kata atau arti…">
           </span>
         </label>
       </div>
       <div class="tabs" role="tablist" aria-label="Mode belajar">
         <button id="listTab" class="tab is-active" type="button" role="tab" aria-selected="true" aria-controls="listPanel">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>Daftar kotoba
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>単語一覧
         </button>
         <button id="quizTab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="quizPanel">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="m8 11 2.4 2.5L16 8m-8 9h8"/></svg>Tes bacaan
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="m8 11 2.4 2.5L16 8m-8 9h8"/></svg>読み方テスト
         </button>
       </div>
       <div class="hints">
         <span id="wordTotal">0 kata</span>
-        <span class="hint-audio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Zm4 4a4 4 0 0 1 0 6m2.6-8.5a7.5 7.5 0 0 1 0 11"/></svg>Tap kanji: suara</span>
+        <span class="hint-audio"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Zm4 4a4 4 0 0 1 0 6m2.6-8.5a7.5 7.5 0 0 1 0 11"/></svg>Ketuk kata: suara · Panah: detail</span>
       </div>
+      <p id="audioStatus" class="audio-status" aria-live="polite"></p>
     </section>
 
     <section id="listPanel" class="learning-section" role="tabpanel" aria-labelledby="listTab">
-      <div class="section-head"><div><p class="eyebrow">DAFTAR KOTOBA</p><h2 id="listTitle">Bab 1</h2></div><span id="listCount" class="section-count"></span></div>
+      <div class="section-head"><div><h2 id="listTitle" class="jp" lang="ja">全単語</h2></div><span id="listCount" class="section-count"></span></div>
       <div class="vocab-table" role="table" aria-label="Daftar kotoba">
-        <div class="vocab-table__head" role="row"><span role="columnheader">Kana</span><span role="columnheader">Kanji / Kata</span><span role="columnheader">Arti</span></div>
+        <div class="vocab-table__head jp" lang="ja" role="row"><span role="columnheader">単語</span><span role="columnheader">意味</span></div>
         <div id="vocabRows" class="vocab-table__body" role="rowgroup"></div>
       </div>
-      <p id="listEmpty" class="empty-state" hidden>Belum ada data kotoba pada bab ini.</p>
+      <p id="listEmpty" class="empty-state" hidden>Belum ada kotoba dalam kategori ini.</p>
     </section>
 
     <section id="quizPanel" class="learning-section" role="tabpanel" aria-labelledby="quizTab" hidden>
-      <div class="section-head"><div><p class="eyebrow">LATIHAN MANDIRI</p><h2 id="quizTitle">Tes bacaan · Bab 1</h2></div><span id="quizCount" class="section-count">0 / 0</span></div>
+      <div class="section-head"><div><h2 id="quizTitle">Tes bacaan</h2></div><span id="quizCount" class="section-count">0 / 0</span></div>
       <div class="quiz panel">
         <div class="progress-track"><div id="progressFill" class="progress-fill"></div></div>
         <div id="quizWork">
-          <div class="kanji-card"><span class="kanji-card__hint jp" lang="ja">かんじを よんでください</span><div id="quizKanji" class="kanji-card__text jp" lang="ja">先生</div></div>
+          <div class="kanji-card"><span class="kanji-card__hint jp" lang="ja">漢字を読んでください</span><div id="quizKanji" class="kanji-card__text jp" lang="ja"></div></div>
           <form id="quizForm" class="quiz-form" novalidate>
-            <label for="quizAnswer" class="jp" lang="ja">こたえ（かなだけ）</label>
-            <div class="quiz-form__controls"><input id="quizAnswer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" lang="ja" placeholder="ひらがな・カタカナで入力" enterkeyhint="done"><button type="submit" id="checkAnswer" class="primary-btn">Cek</button></div>
-            <p id="inputHint" class="input-hint" aria-live="polite">Jawab dengan kana sesuai bacaan di data. Romaji tidak diterima.</p>
+            <label for="quizAnswer" class="jp" lang="ja">解答</label>
+            <div class="quiz-form__controls"><input id="quizAnswer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" lang="ja" placeholder="ひらがな・カタカナで入力" enterkeyhint="done"><button type="submit" id="checkAnswer" class="primary-btn">確認</button></div>
+            <p id="inputHint" class="input-hint" aria-live="polite">Jawab dengan kana. Romaji tidak diterima.</p>
           </form>
         </div>
         <div id="quizFinish" class="quiz-finish" hidden>
           <div class="quiz-finish__symbol" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="3"/><path d="m14 24 7 7 13-15" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <h3 class="jp" lang="ja">テスト終了！</h3><p>Semua bacaan sudah dijawab.</p><button id="restartQuiz" type="button" class="primary-btn">Ulangi tes</button>
+          <h3 class="jp" lang="ja">テスト終了！</h3><p>Semua bacaan sudah dijawab.</p><button id="restartQuiz" type="button" class="primary-btn">もう一度</button>
         </div>
-        <p id="quizEmpty" class="empty-state" hidden>Belum ada kotoba berkanji untuk dites di bab ini.</p>
+        <p id="quizEmpty" class="empty-state" hidden>Belum ada kosakata berkanji dalam kategori ini untuk dites.</p>
       </div>
     </section>
   </main>
 
   <footer class="footer shell jp" lang="ja">
-    <span class="footer__title">みんなの日本語「言葉」</span>
+    <span class="footer__title">JFT 「言葉」</span>
     <span class="footer__divider" aria-hidden="true"></span>
     <span class="footer__credit">制作：ファルハン・アブドゥルラフマン</span>
   </footer>
 
   <div id="meaningOverlay" class="modal-overlay meaning-overlay" role="presentation" hidden>
     <div id="meaningDialog" class="meaning-dialog" role="dialog" aria-modal="true" aria-labelledby="meaningTitle" aria-describedby="meaningFull" tabindex="-1">
-      <button id="closeMeaning" type="button" class="meaning-dialog__close" aria-label="Tutup arti lengkap">
+      <button id="closeMeaning" type="button" class="meaning-dialog__close" aria-label="Tutup detail">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5 19 19M19 5 5 19"/></svg>
       </button>
-      <p class="meaning-dialog__eyebrow">ARTI KOTOBA</p>
       <h2 id="meaningTitle" class="jp" lang="ja"></h2>
       <p id="meaningFull"></p>
     </div>
