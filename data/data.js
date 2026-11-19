@@ -36,7 +36,7 @@ window.JFT_KOTOBA = [
   { kata: "二階", kana: "にかい", arti: "Lantai 2", kategori: "名詞" },
   { kata: "外", kana: "そと", arti: "Luar", kategori: "名詞" },
   { kata: "高い", kana: "たかい", arti: "Mahal", kategori: "形容詞" },
-  { kata: "食事します", kana: "しょくじします", arti: "Makan (selain たべます)", kategori: "動詞" },
+  { kata: "食事します", kana: "しょくじします", arti: "Makan / bersantap", kategori: "動詞" },
   { kata: "机", kana: "つくえ", arti: "Meja", kategori: "名詞" },
   { kata: "テーブル", kana: "テーブル", arti: "Meja", kategori: "名詞" },
   { kata: "コピーします", kana: "コピーします", arti: "Memfotokopi", kategori: "動詞" },
