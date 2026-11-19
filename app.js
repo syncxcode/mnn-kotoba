@@ -5,7 +5,8 @@
   const DATA = Array.isArray(window.JFT_KOTOBA) ? window.JFT_KOTOBA : [];
   const CATEGORIES = [
     '動詞', '形容詞', '形容動詞', '名詞',
-    '副詞', '接続詞', '助詞', '感動詞', '表現'
+    '数量表現', '時間表現', '副詞',
+    '接続詞', '助詞', '感動詞', '表現'
   ];
   const FEEDBACK_MS = 8000;
   const PAGE_SIZE = 10;
