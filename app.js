@@ -27,7 +27,7 @@
     pageNext: $('pageNext'), pageIndicator: $('pageIndicator'),
     quizTitle: $('quizTitle'), quizCount: $('quizCount'), progress: $('progressFill'),
     quizWork: $('quizWork'), quizEmpty: $('quizEmpty'), quizFinish: $('quizFinish'),
-    quizKanji: $('quizKanji'), quizForm: $('quizForm'),
+    quizKanji: $('quizKanji'), quizContext: $('quizContext'), quizForm: $('quizForm'),
     quizAnswer: $('quizAnswer'), inputHint: $('inputHint'), restart: $('restartQuiz'),
     overlay: $('feedbackOverlay'), dialog: $('feedbackDialog'),
     feedbackSymbol: $('feedbackSymbol'), feedbackTitle: $('feedbackTitle'),
@@ -353,7 +353,19 @@
     els.quizEmpty.hidden = total !== 0;
     els.quizFinish.hidden = total === 0 || idx < total;
     els.quizWork.hidden = total === 0 || idx >= total;
-    if (idx < total) els.quizKanji.textContent = state.quizItems[idx].kata;
+    if (idx < total) {
+      const item = state.quizItems[idx];
+      els.quizKanji.textContent = item.kata;
+      const ambiguous = state.quizItems.some(other =>
+        other !== item && other.kata === item.kata && other.kana !== item.kana
+      );
+      // A single kanji can have multiple readings: show its meaning only in that case.
+      els.quizContext.hidden = !ambiguous;
+      els.quizContext.textContent = ambiguous ? item.arti : '';
+    } else {
+      els.quizContext.hidden = true;
+      els.quizContext.textContent = '';
+    }
   }
 
   const feedbackIcon = correct => correct
