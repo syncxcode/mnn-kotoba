@@ -337,3 +337,65 @@ html.meaning-open body { position: fixed; width: 100%; }
 @media (max-width: 360px) {
   .brand__name { font-size: 1.16rem; }
 }
+
+
+/* Expand control v3: small glass accent, full finger-friendly touch target. */
+.word-expand {
+  position: relative;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(245, 234, 227, .64);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .16s ease, color .16s ease;
+}
+.word-expand::before {
+  content: "";
+  position: absolute;
+  inset: 6px 5px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .055);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+  transition: border-color .16s ease, background .16s ease;
+}
+.word-expand svg {
+  position: relative;
+  z-index: 1;
+  width: 13px;
+  height: 13px;
+  opacity: .75;
+}
+.word-expand:hover,
+.word-expand:focus-visible {
+  background: transparent;
+  color: #f3dfd7;
+  transform: scale(1.04);
+}
+.word-expand:hover::before,
+.word-expand:focus-visible::before {
+  background: rgba(255, 255, 255, .09);
+  border-color: rgba(255, 255, 255, .22);
+}
+.word-expand:active { transform: scale(.94); }
+
+/* Enlarged MS Mincho word in the modal; wrap long terms safely. */
+.meaning-dialog h2 {
+  font-size: clamp(3.75rem, 18vw, 7.5rem);
+  line-height: 1.25;
+  margin: 16px 4px 20px;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-align: center;
+}
+@media (max-width: 620px) {
+  .word-expand { flex-basis: 32px; width: 32px; height: 36px; }
+  .word-expand svg { width: 13px; height: 13px; }
+}
