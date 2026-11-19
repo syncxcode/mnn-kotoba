@@ -335,9 +335,14 @@
   }
 
   function resetQuiz() {
-    state.quizItems = entries().filter(item =>
+    const readable = entries().filter(item =>
       hasKanji(item.kata) && kanaRegex.test(normalize(item.kana))
     );
+    // Same spelling and meaning can have more than one valid reading (四, 七, 九, 分).
+    // Ask only once per word/meaning; accept any of its recorded readings.
+    state.quizItems = readable.filter((item, i) => readable.findIndex(other =>
+      other.kata === item.kata && other.arti === item.arti
+    ) === i);
     state.quizIndex = 0;
     state.mistakes = 0;
     els.quizAnswer.value = '';
@@ -432,8 +437,11 @@
       els.inputHint.textContent = 'Gunakan huruf kana, bukan romaji.';
       return;
     }
-    const expected = normalize(state.quizItems[state.quizIndex].kana);
-    if (answer === expected) feedback(true, false);
+    const current = state.quizItems[state.quizIndex];
+    const accepted = entries().filter(other =>
+      other.kata === current.kata && other.arti === current.arti
+    ).map(other => normalize(other.kana));
+    if (accepted.includes(answer)) feedback(true, false);
     else {
       state.mistakes++;
       feedback(false, state.mistakes >= 3);
