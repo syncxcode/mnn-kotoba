@@ -8,6 +8,7 @@
     '副詞', '接続詞', '助詞', '感動詞', '表現'
   ];
   const FEEDBACK_MS = 8000;
+  const PAGE_SIZE = 10;
   const A_Z = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
   const JA = new Intl.Collator('ja');
   const kanaRegex = /^[\p{Script=Hiragana}\p{Script=Katakana}ー\s]+$/u;
@@ -21,6 +22,8 @@
     listPanel: $('listPanel'), quizPanel: $('quizPanel'),
     rows: $('vocabRows'),
     listTitle: $('listTitle'), listEmpty: $('listEmpty'),
+    pagination: $('paginationNav'), pagePrevious: $('pagePrevious'),
+    pageNext: $('pageNext'), pageIndicator: $('pageIndicator'),
     quizTitle: $('quizTitle'), quizCount: $('quizCount'), progress: $('progressFill'),
     quizWork: $('quizWork'), quizEmpty: $('quizEmpty'), quizFinish: $('quizFinish'),
     quizKanji: $('quizKanji'), quizForm: $('quizForm'),
@@ -34,7 +37,7 @@
   };
 
   const state = {
-    category: CATEGORIES.find(category => DATA.some(item => item.kategori === category)) || CATEGORIES[0], tab: 'list', query: '',
+    category: CATEGORIES.find(category => DATA.some(item => item.kategori === category)) || CATEGORIES[0], tab: 'list', query: '', page: 0,
     quizItems: [], quizIndex: 0, mistakes: 0,
     composing: false, popupTimer: 0, popupAction: null
   };
@@ -164,14 +167,24 @@
         String(value || '').toLocaleLowerCase().includes(q))
     );
 
+    const pageCount = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
+    state.page = Math.max(0, Math.min(state.page, pageCount - 1));
+    const pageItems = shown.slice(state.page * PAGE_SIZE, (state.page + 1) * PAGE_SIZE);
+
     els.listTitle.textContent = state.category;
     els.rows.replaceChildren();
     els.listEmpty.hidden = shown.length > 0;
     if (!shown.length) els.listEmpty.textContent =
       all.length ? 'Tidak ada kata yang cocok.' : 'Belum ada kotoba dalam kategori ini.';
 
+    // No pagination needed for empty lists or categories with ten words or fewer.
+    els.pagination.hidden = pageCount <= 1;
+    els.pageIndicator.textContent = (state.page + 1) + ' / ' + pageCount;
+    els.pagePrevious.disabled = state.page === 0;
+    els.pageNext.disabled = state.page >= pageCount - 1;
+
     const fragment = document.createDocumentFragment();
-    shown.forEach(item => {
+    pageItems.forEach(item => {
       const row = element('div', 'vocab-row');
       row.setAttribute('role', 'row');
 
@@ -200,6 +213,20 @@
       fragment.appendChild(row);
     });
     els.rows.appendChild(fragment);
+  }
+
+  function changePage(delta) {
+    const previousPage = state.page;
+    state.page += delta;
+    renderList(); // renderList clamps page index to valid bounds.
+    if (state.page === previousPage) return;
+    // Return to the START OF THE WORD LIST, below the sticky masthead.
+    // Do this after rendering so the shorter list cannot leave the user at the old scroll position.
+    window.requestAnimationFrame(() => {
+      const stickyHeight = document.querySelector('.masthead')?.getBoundingClientRect().height || 0;
+      const offset = els.listPanel.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: Math.max(0, offset - stickyHeight - 12), behavior: 'auto' });
+    });
   }
 
   let previousFocus = null;
@@ -404,6 +431,7 @@
     fillCategories();
     els.category.addEventListener('change', () => {
       state.category = els.category.value;
+      state.page = 0;
       state.query = '';
       els.search.value = '';
       closeMeaning();
@@ -413,8 +441,11 @@
     });
     els.search.addEventListener('input', () => {
       state.query = els.search.value.trim();
+      state.page = 0;
       renderList();
     });
+    els.pagePrevious.addEventListener('click', () => changePage(-1));
+    els.pageNext.addEventListener('click', () => changePage(1));
     els.listTab.addEventListener('click', () => switchTab('list'));
     els.quizTab.addEventListener('click', () => switchTab('quiz'));
     els.quizForm.addEventListener('submit', handleAnswer);
