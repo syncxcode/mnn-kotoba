@@ -14,7 +14,7 @@
   --accent-soft: rgba(184, 58, 31, .15);
   --focus: #f99873;
   --radius: 19px;
-  --jp: 'Shippori Mincho', 'Yu Mincho', 'Hiragino Mincho ProN', 'Noto Serif CJK JP', serif;
+  --jp: 'MS Mincho', 'ＭＳ 明朝', 'Yu Mincho', 'Noto Serif JP', 'Noto Serif CJK JP', serif;
   font-family: 'Ubuntu', system-ui, -apple-system, 'Segoe UI', sans-serif;
   font-synthesis: none;
 }
@@ -258,3 +258,59 @@ html.meaning-open body { position: fixed; width: 100%; }
   color: #443a37;
 }
 .meaning-dialog__close svg { width: 17px; height: 17px; }
+
+
+/* JFT 「言葉」 — responsive two-column vocabulary layout. */
+
+.brand__name { font-family: var(--jp); font-size: clamp(1.45rem,3.2vw,2.05rem); font-weight: 600; letter-spacing: .025em; }
+.masthead .brand { padding-block: 25px; }
+.vocab-table__head,
+.vocab-row { grid-template-columns: minmax(0,1fr) minmax(0,1.25fr); gap: 9px; }
+.vocab-table__head { padding: 0 0 10px; text-transform: none; font-size: 1rem; letter-spacing: .04em; }
+.vocab-table__head > span {
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px 14px; min-height: 48px;
+  background: linear-gradient(135deg,#a93c27,#c14c31);
+  border: 1px solid #d36248; border-radius: 11px;
+  color: #fff; font-family: var(--jp); font-size: 1.08rem;
+  font-weight: 700; box-shadow: 0 5px 16px #0003;
+}
+.cell--word { display: flex; gap: 6px; padding: 6px 8px; overflow: visible; font-family: var(--jp); font-size: clamp(1.1rem,2.2vw,1.38rem); }
+.word-speak { display: flex; align-items: center; flex: 1; min-width: 0; min-height: 48px; border: 0; padding: 5px 6px; background: none; color: #fff8f4; font-family: var(--jp); font-size: inherit; font-weight: 600; text-align: left; overflow-wrap: anywhere; cursor: pointer; border-radius: 8px; }
+.word-speak:hover, .word-speak:focus-visible { background: #47332e; }
+.word-speak--active { animation: wordPulse .23s ease-out; }
+@keyframes wordPulse { 45% { transform: scale(1.045); color: #ffae8d; } }
+.word-expand { display: grid; place-items: center; flex: 0 0 34px; align-self: center; width: 34px; height: 36px; border-radius: 9px; border: 1px solid #754d41; background: #44312c; color: #f19b7c; cursor: pointer; transition: background .15s, transform .15s; }
+.word-expand svg { width: 19px; height: 19px; }
+.word-expand:hover, .word-expand:focus-visible { background: #77422f; color: #fff; transform: scale(1.04); }
+.word-speak:focus-visible, .word-expand:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cell--meaning { cursor: default; }
+.cell--meaning:hover { transform: none; }
+.meaning-text { -webkit-line-clamp: 2; line-clamp: 2; }
+.audio-status:empty { display: none; }
+.audio-status { margin: -8px 0 0; color: #ffc4af; font-size: .8rem; }
+.meaning-dialog { text-align: center; }
+.meaning-dialog h2 {
+  font-family: var(--jp); font-size: clamp(2.4rem,9vw,4.6rem);
+  font-weight: 600; margin: 12px 24px 14px; line-height: 1.4;
+  text-align: center;
+}
+.meaning-dialog #meaningFull { font-size: 1.06rem; text-align: center; }
+.field select.jp { font-family: var(--jp); }
+@media (max-width: 620px) {
+  .masthead .brand { padding-block: 20px; }
+  .brand__name { font-size: 1.5rem; }
+  .vocab-table__head,.vocab-row { grid-template-columns: minmax(0,1fr) minmax(0,1.17fr); gap: 6px; }
+  .vocab-table__head > span { min-height: 43px; padding: 9px 4px; font-size: .99rem; }
+  .cell--word { padding: 6px 4px; gap: 3px; font-size: 1.03rem; }
+  .word-speak { min-height: 45px; padding: 5px 4px; }
+  .word-expand { flex-basis: 29px; width: 29px; height: 32px; }
+  .word-expand svg { width: 17px; height: 17px; }
+  .cell--meaning { font-size: .84rem; }
+}
+@media (max-width: 360px) {
+  .brand__name { font-size: 1.3rem; }
+  .vocab-table__head,.vocab-row { gap: 4px; }
+  .word-expand { flex-basis: 28px; width: 28px; }
+  .cell--word { font-size: .96rem; }
+}
