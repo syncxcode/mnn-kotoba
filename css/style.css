@@ -443,3 +443,50 @@ html.meaning-open body { position: fixed; width: 100%; }
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+
+/* Vocabulary pagination — ten sorted words per category page. */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: clamp(10px, 3vw, 22px);
+  margin-top: 22px;
+  padding: 5px 0 10px;
+}
+.pagination__button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 86px;
+  min-height: 43px;
+  padding: 8px 13px;
+  border: 1px solid rgba(235, 120, 90, .4);
+  border-radius: 11px;
+  background: rgba(186, 60, 34, .14);
+  color: #f4d4c7;
+  font: 600 1rem/1.2 var(--jp);
+  transition: background .16s, border-color .16s, transform .16s;
+}
+.pagination__button:hover:not(:disabled),
+.pagination__button:focus-visible {
+  background: rgba(186, 60, 34, .3);
+  border-color: #da7254;
+}
+.pagination__button:active:not(:disabled) { transform: scale(.97); }
+.pagination__button:disabled {
+  opacity: .28;
+  cursor: default;
+}
+.pagination__indicator {
+  min-width: 65px;
+  text-align: center;
+  color: #e3d6d2;
+  font-size: .89rem;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 360px) {
+  .pagination { gap: 8px; }
+  .pagination__button { min-width: 76px; }
+  .pagination__indicator { min-width: 57px; }
+}
