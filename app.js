@@ -230,6 +230,41 @@
     scrollState = null;
     window.scrollTo(x, y);
   }
+  // Adjust only the Japanese text size. The modal dimensions never depend on text length.
+  function fitMeaningWord() {
+    if (els.meaningOverlay.hidden) return;
+    const title = els.meaningTitle;
+    const area = title.parentElement;
+    const maxWidth = area.clientWidth - 8;
+    const maxHeight = area.clientHeight - 8;
+    if (maxWidth <= 0 || maxHeight <= 0) return;
+
+    title.style.whiteSpace = 'nowrap';
+    title.style.width = 'max-content';
+    let size = 112;
+    while (size > 26) {
+      title.style.fontSize = size + 'px';
+      if (title.scrollWidth <= maxWidth && title.scrollHeight <= maxHeight) return;
+      size -= 2;
+    }
+    title.style.fontSize = '26px';
+    if (title.scrollWidth <= maxWidth && title.scrollHeight <= maxHeight) return;
+
+    // Exception for exceptionally long phrases: allow wrapping within the fixed word area.
+    title.style.whiteSpace = 'normal';
+    title.style.width = '100%';
+    size = 34;
+    while (size > 24) {
+      title.style.fontSize = size + 'px';
+      if (title.scrollHeight <= maxHeight && title.scrollWidth <= maxWidth) return;
+      size -= 2;
+    }
+    title.style.fontSize = '24px';
+    // On very small screens, the word area itself can scroll; never resize the modal.
+  }
+  function scheduleMeaningFit() {
+    window.requestAnimationFrame(fitMeaningWord);
+  }
   function openMeaning(item) {
     if (!els.meaningOverlay.hidden) return;
     previousFocus = document.activeElement;
@@ -238,6 +273,13 @@
     lockScroll();
     els.meaningOverlay.hidden = false;
     els.meaningDialog.scrollTop = 0;
+    fitMeaningWord();
+    // External fonts can finish loading after the popup is first shown.
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!els.meaningOverlay.hidden) scheduleMeaningFit();
+      });
+    }
     els.closeMeaning.focus({ preventScroll: true });
   }
   function closeMeaning() {
@@ -392,6 +434,9 @@
       if (event.target === els.meaningOverlay) closeMeaning();
     });
     els.closeMeaning.addEventListener('click', closeMeaning);
+    window.addEventListener('resize', () => {
+      if (!els.meaningOverlay.hidden) scheduleMeaningFit();
+    });
     document.addEventListener('keydown', event => {
       if (!els.meaningOverlay.hidden) {
         if (event.key === 'Escape') { event.preventDefault(); closeMeaning(); }
