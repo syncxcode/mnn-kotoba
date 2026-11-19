@@ -399,3 +399,47 @@ html.meaning-open body { position: fixed; width: 100%; }
   .word-expand { flex-basis: 32px; width: 32px; height: 36px; }
   .word-expand svg { width: 13px; height: 13px; }
 }
+
+
+/* Fixed-size popup regardless of word length; only the Japanese text auto-fits. */
+.meaning-dialog {
+  display: flex;
+  flex-direction: column;
+  height: min(430px, calc(100dvh - 40px));
+  max-height: calc(100dvh - 40px);
+  min-height: 0;
+  overflow: hidden;
+}
+.meaning-dialog__word-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow: auto;
+  padding-top: 22px;
+  overscroll-behavior: contain;
+}
+.meaning-dialog .meaning-dialog__word-area h2 {
+  flex: 0 0 auto;
+  display: block;
+  width: max-content;
+  max-width: none;
+  margin: 0;
+  font-family: var(--jp);
+  font-size: clamp(2.6rem, 13vw, 7rem);
+  font-weight: 600;
+  line-height: 1.16;
+  text-align: center;
+  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+.meaning-dialog #meaningFull {
+  flex: 0 0 auto;
+  height: min(108px, 27dvh);
+  max-height: 31%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
