@@ -17,8 +17,8 @@
     category: $('categorySelect'), search: $('searchInput'),
     listTab: $('listTab'), quizTab: $('quizTab'),
     listPanel: $('listPanel'), quizPanel: $('quizPanel'),
-    total: $('wordTotal'), rows: $('vocabRows'),
-    listTitle: $('listTitle'), listCount: $('listCount'), listEmpty: $('listEmpty'),
+    rows: $('vocabRows'),
+    listTitle: $('listTitle'), listEmpty: $('listEmpty'),
     quizTitle: $('quizTitle'), quizCount: $('quizCount'), progress: $('progressFill'),
     quizWork: $('quizWork'), quizEmpty: $('quizEmpty'), quizFinish: $('quizFinish'),
     quizKanji: $('quizKanji'), quizForm: $('quizForm'),
@@ -100,8 +100,6 @@
     );
 
     els.listTitle.textContent = state.category === '全分類' ? '全単語' : state.category;
-    els.total.textContent = DATA.length + ' kata';
-    els.listCount.textContent = shown.length + ' dari ' + all.length + ' kata';
     els.rows.replaceChildren();
     els.listEmpty.hidden = shown.length > 0;
     if (!shown.length) els.listEmpty.textContent =
